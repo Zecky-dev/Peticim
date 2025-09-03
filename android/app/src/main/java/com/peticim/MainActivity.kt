@@ -1,4 +1,4 @@
-package com.peticim
+package com.zeckydev.peticim
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

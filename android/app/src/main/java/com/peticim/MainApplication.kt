@@ -1,4 +1,4 @@
-package com.peticim
+package com.zeckydev.peticim
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -5,9 +5,20 @@ import { toastConfig } from '@config/toastConfig';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
-import { Adoptions, Login, Register, AddAdoption, Profile, Favorites, ForgotPassword } from '@screens';
+import {
+  Adoptions,
+  Login,
+  Register,
+  AddAdoption,
+  Profile,
+  Favorites,
+  ForgotPassword,
+} from '@screens';
 import LoadingProvider from '@context/LoadingContext';
 import AuthProvider, { useAuth } from '@context/AuthContext';
 import colors from '@utils/colors';
@@ -20,9 +31,16 @@ const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={Login} />
     <Stack.Screen name="Register" component={Register} />
-    <Stack.Screen name="ForgotPassword" component={ForgotPassword}/>
+    <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
   </Stack.Navigator>
 );
+
+const ProfileStack = () => {
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Profile" component={Profile} />
+    <Stack.Screen name="AccountDetails" component={Register} />
+  </Stack.Navigator>;
+};
 
 function AppStack() {
   return (

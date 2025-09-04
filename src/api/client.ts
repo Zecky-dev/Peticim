@@ -1,51 +1,58 @@
-// src/api/axiosClient.ts
 import axios from 'axios';
+import { Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
+import {
+  ANDROID_EMULATOR_DEV_URL,
+  IOS_EMULATOR_DEV_URL,
+  ANDROID_PHYSICAL_DEV_URL,
+  API_URL,
+} from '@env';
 
-console.log(process.env.DEV_API_ANDROID_URL)
+const getBaseURL = () => {
+  const OS = Platform.OS;
+  const isEmulator = DeviceInfo.isEmulatorSync();
+  const IS_DEV = __DEV__;
+
+  if (IS_DEV) {
+    if (OS === 'android') {
+      if (isEmulator) {
+        return ANDROID_EMULATOR_DEV_URL;
+      } else {
+        return ANDROID_PHYSICAL_DEV_URL;
+      }
+    } else {
+      return IOS_EMULATOR_DEV_URL;
+    }
+  } else {
+    return API_URL;
+  }
+};
+
+console.log(getBaseURL())
 
 const axiosClient = axios.create({
-  baseURL: process.env.DEV_API_ANDROID_URL,
-  timeout: 10000,
+  baseURL: getBaseURL(),
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-/*
-// 🔹 Request Interceptor (örn. token eklemek için)
-axiosClient.interceptors.request.use(
-  async (config) => {
-    // örn: AsyncStorage'dan token al
-    // const token = await AsyncStorage.getItem("token");
-    const token = "dummy-token"; 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-*/
 
-// 🔹 Response Interceptor (hataları yakalamak için)
 axiosClient.interceptors.response.use(
   response => response,
   error => {
-    // Sunucudan dönen hata yanıtı varsa
     if (error.response) {
       console.log('Hata Durum Kodu:', error.response.status);
       console.log('Hata Verisi:', error.response.data);
       console.log('Hata Başlıkları:', error.response.headers);
     }
-    // İstek gönderildi ancak yanıt alınamadıysa
     else if (error.request) {
       console.log('Yanıt Alınamadı:', error.request);
     }
-    // Hatayı oluşturan başka bir şey varsa
     else {
       console.log('Hata:', error.message);
     }
-
     console.log('Hata Konfigürasyonu:', error.config);
     return Promise.reject(error);
   },

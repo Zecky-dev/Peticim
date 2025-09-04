@@ -24,6 +24,8 @@ module.exports = {
           '@context/*': './src/context/*',
           '@api': './src/api',
           '@api/*': './src/api/*',
+          '@hooks': './src/hooks',
+          '@hooks/*': './src/hooks/*',
         },
       },
     ],

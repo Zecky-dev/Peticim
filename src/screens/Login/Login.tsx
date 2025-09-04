@@ -6,7 +6,6 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
 } from 'react-native';
 import {
   useNavigation,
@@ -60,7 +59,7 @@ const Login = () => {
           }
         }
       } catch (error) {
-        console.error('Failed to load credentials from storage:', error);
+        console.log('Failed to load credentials from storage:', error);
       }
     };
     loadRememberedCredentials();

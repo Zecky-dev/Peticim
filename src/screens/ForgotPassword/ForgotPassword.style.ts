@@ -8,8 +8,6 @@ export default StyleSheet.create({
   },
   backButtonContainer: {
     position: 'absolute',
-    top: 32,
-    left: 24,
   },
   forgotPasswodForm: {
     gap: 12,

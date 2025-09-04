@@ -7,7 +7,7 @@ class Storage {
       await AsyncStorage.setItem(key, serializedValue);
       console.log(`Veri başarıyla kaydedildi: ${key}`);
     } catch (error: any) {
-      console.error(`Veri kaydetme hatası (${key}):`, error);
+      console.log(`Veri kaydetme hatası (${key}):`, error);
       throw error;
     }
   }
@@ -24,7 +24,7 @@ class Storage {
       }
       return null;
     } catch (error: any) {
-      console.error(`Veri okuma hatası (${key}):`, error);
+      console.log(`Veri okuma hatası (${key}):`, error);
       throw error;
     }
   }
@@ -34,7 +34,7 @@ class Storage {
       await AsyncStorage.removeItem(key);
       console.log(`Veri başarıyla silindi: ${key}`);
     } catch (error: any) {
-      console.error(`Veri silme hatası (${key}):`, error);
+      console.log(`Veri silme hatası (${key}):`, error);
       throw error;
     }
   }

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Input, Button, BackButton } from '@components';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import styles from './ForgotPassword.style';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@context/AuthContext';
@@ -11,6 +14,7 @@ import { showToast } from '@config/toastConfig';
 const ForgotPassword = () => {
   const route = useRoute<RouteProp<AuthStackParamList, 'ForgotPassword'>>();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState(route.params.prefilledEmail || '');
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -47,7 +51,12 @@ const ForgotPassword = () => {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
-      <View style={styles.backButtonContainer}>
+      <View
+        style={[
+          styles.backButtonContainer,
+          { top: insets.top + 16, left: insets.left + 16 },
+        ]}
+      >
         <BackButton size={36} />
       </View>
       <View style={styles.forgotPasswodForm}>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { FirebaseAuthTypes, getAuth, updateProfile } from '@react-native-firebase/auth';
+import { FirebaseAuthTypes, updateProfile } from '@react-native-firebase/auth';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -10,7 +10,7 @@ import { generateErrorMessage } from '@firebase/helpers/generateErrorMessage';
 import { sendVerificationEmail, sendPasswordResetEmail } from '@api/auth';
 import { useLoading } from './LoadingContext';
 import { doc, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
-import { db } from '@firebase/firebase';
+import { auth, db } from '@firebase/firebase';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -35,33 +35,31 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   function onAuthStateChangedCallback(user: FirebaseAuthTypes.User | null) {
     if (user && !user.emailVerified) {
       setUser(null);
-      logout();
     } else {
       setUser(user);
     }
+
     if (initializing) {
       setInitializing(false);
     }
   }
 
   useEffect(() => {
-    const subscriber = onAuthStateChanged(
-      getAuth(),
-      onAuthStateChangedCallback,
-    );
+    const subscriber = onAuthStateChanged(auth, onAuthStateChangedCallback);
     return subscriber;
   }, []);
 
   const login = async (email: string, password: string) => {
-    console.log('login_start');
     try {
       showLoading();
       const userCredential = await signInWithEmailAndPassword(
-        getAuth(),
+        auth,
         email,
         password,
       );
       const user = userCredential.user;
+      const idToken = await user.getIdToken();
+      console.log('ID_TOKEN', idToken);
       if (!user.emailVerified) {
         const error: any = new Error('E-posta adresi doğrulanmamış.');
         error.code = 'auth/email-not-verified';
@@ -80,7 +78,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       showLoading();
       const userCredential = await createUserWithEmailAndPassword(
-        getAuth(),
+        auth,
         email,
         password,
       );
@@ -96,17 +94,20 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
           photoURL: otherData.profilePicture || null,
         });
         await sendVerificationEmail(email);
+        await logout();
       }
     } catch (error: any) {
-      console.error('REGISTER_ERROR', error);
+      console.log('REGISTER_ERROR', error);
       throw new Error(generateErrorMessage(error.code));
+    } finally {
+      hideLoading();
     }
   };
 
   const logout = async () => {
     try {
       showLoading();
-      await signOut(getAuth());
+      await signOut(auth);
     } catch (error: any) {
       throw new Error('Çıkış yapılırken bir hata oluştu.');
     } finally {
@@ -119,7 +120,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       showLoading();
       await sendPasswordResetEmail(email);
     } catch (error: any) {
-      console.error('PASSWORD_RESET_ERROR', error);
+      console.log('PASSWORD_RESET_ERROR', error);
       throw new Error(
         error.message ||
           'Şifre sıfırlama e-postası gönderilirken bir hata oluştu.',

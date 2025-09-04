@@ -9,7 +9,7 @@ import {
 import styles from './Register.style';
 import { BackButton, Button, Alert, Input } from '@components';
 import { Formik } from 'formik';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { registerValidationSchema } from '@utils/validationSchemas';
 
 import { showToast } from '@config/toastConfig';
@@ -20,6 +20,7 @@ import { useLoading } from '@context/LoadingContext';
 const Register = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { register } = useAuth();
   const { hideLoading } = useLoading();
 
@@ -61,7 +62,7 @@ const Register = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.backButtonContainer}>
+      <View style={[styles.backButtonContainer, { top: insets.top + 16, left: insets.left + 16}]}>
         <BackButton size={36} />
       </View>
       <KeyboardAvoidingView

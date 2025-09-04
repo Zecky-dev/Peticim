@@ -19,6 +19,8 @@
       "@context/*": ["./context/*"],
       "@api": ["./api"],
       "@api/*": ["./api/*"],
+      "@hooks": ["./hooks"],
+      "@hooks/*": ["./hooks/*"],
     }
   },
 }

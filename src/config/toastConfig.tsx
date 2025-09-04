@@ -51,7 +51,7 @@ export const toastConfig: ToastConfig = {
       {...props}
       style={{
         ...COMMON_TOAST_STYLES.container,
-        backgroundColor: colors.success_green,
+        backgroundColor: colors.success,
       }}
       contentContainerStyle={COMMON_TOAST_STYLES.contentContainer}
       text1Style={COMMON_TOAST_STYLES.text1Style}

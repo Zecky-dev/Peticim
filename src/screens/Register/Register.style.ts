@@ -24,8 +24,6 @@ export default StyleSheet.create({
     },
     backButtonContainer: {
         position: "absolute",
-        top: 32,
-        left: 24,
     },
     form: {
         gap: 8,

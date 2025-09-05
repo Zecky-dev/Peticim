@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TouchableOpacity,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert, Icon } from '@components';
 import colors from '@utils/colors';
 import styles from './Input.style';
@@ -25,7 +25,10 @@ type InputProps = {
   placeholder?: string;
   customStyles?: CustomStyle;
   secureContent?: boolean;
-  error?: string;
+  error?: string;ƒ
+  maxLength?: number;
+  value?: string;
+  showCharacterCount?: boolean;
 } & TextInputProps;
 
 const Input = ({
@@ -34,9 +37,31 @@ const Input = ({
   customStyles,
   error,
   secureContent = false,
+  maxLength,
+  value,
+  showCharacterCount = false,
   ...rest
 }: InputProps) => {
   const [hidden, setHidden] = useState(secureContent);
+  const [characterCount, setCharacterCount] = useState(value?.length || 0);
+
+  useEffect(() => {
+    if (value) {
+      setCharacterCount(value.length);
+    }
+  }, [value]);
+
+  const getCounterColor = () => {
+    if (!maxLength) return {};
+    if (characterCount >= maxLength) {
+      return colors.error;
+    }
+    if (characterCount >= maxLength * 0.5) {
+      return colors.warning;
+    }
+    return colors.gray;
+  };
+
   return (
     <>
       <View style={[styles.outerContainer, customStyles?.outerContainer]}>
@@ -49,6 +74,14 @@ const Input = ({
             style={[styles.input, customStyles?.input]}
             placeholder={placeholder}
             placeholderTextColor={colors.gray}
+            maxLength={maxLength}
+            onChangeText={text => {
+              setCharacterCount(text.length);
+              if (rest.onChangeText) {
+                rest.onChangeText(text);
+              }
+            }}
+            value={value} // Pass value to TextInput
             {...rest}
           />
           {secureContent && (
@@ -62,6 +95,18 @@ const Input = ({
                 color={colors.gray}
               />
             </TouchableOpacity>
+          )}
+          {maxLength && showCharacterCount && (
+            <View style={styles.characterCounterContainer}>
+              <Text
+                style={[
+                  styles.characterCounterText,
+                  { color: getCounterColor() },
+                ]}
+              >
+                {characterCount}/{maxLength}
+              </Text>
+            </View>
           )}
         </View>
       </View>

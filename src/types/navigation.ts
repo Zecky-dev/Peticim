@@ -5,6 +5,11 @@ declare global {
     ForgotPassword: { prefilledEmail?: string };
   };
 
+  type ProfileStackParamList = {
+    Profile: undefined;
+    AccountDetails: undefined;
+  }
+
   type RootStackParamList = {
     Auth: undefined;
     App: undefined;

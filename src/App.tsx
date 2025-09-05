@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@config/toastConfig';
 import { NavigationContainer } from '@react-navigation/native';
@@ -18,6 +18,7 @@ import {
   Profile,
   Favorites,
   ForgotPassword,
+  AccountDetails,
 } from '@screens';
 import LoadingProvider from '@context/LoadingContext';
 import AuthProvider, { useAuth } from '@context/AuthContext';
@@ -35,12 +36,12 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-const ProfileStack = () => {
+const ProfileStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Profile" component={Profile} />
-    <Stack.Screen name="AccountDetails" component={Register} />
-  </Stack.Navigator>;
-};
+    <Stack.Screen name="AccountDetails" component={AccountDetails} />
+  </Stack.Navigator>
+);
 
 function AppStack() {
   return (
@@ -52,6 +53,8 @@ function AppStack() {
         headerTitleStyle: { color: colors.white },
         headerStyle: { backgroundColor: colors.primary },
         headerTitleAlign: 'center',
+        tabBarLabelStyle: { fontFamily: 'Comfortaa-Medium' },
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tab.Screen
@@ -67,7 +70,6 @@ function AppStack() {
               color={colors.white}
             />
           ),
-          tabBarLabelStyle: { fontFamily: 'Comfortaa-Medium' },
         }}
       />
       <Tab.Screen
@@ -83,7 +85,6 @@ function AppStack() {
               color={colors.white}
             />
           ),
-          tabBarLabelStyle: { fontFamily: 'Comfortaa-Medium' },
         }}
       />
       <Tab.Screen
@@ -99,12 +100,11 @@ function AppStack() {
               color={colors.white}
             />
           ),
-          tabBarLabelStyle: { fontFamily: 'Comfortaa-Medium' },
         }}
       />
       <Tab.Screen
         name="Profile"
-        component={Profile}
+        component={ProfileStack}
         options={{
           title: 'Profil',
           tabBarIcon: ({ focused }) => (
@@ -115,7 +115,6 @@ function AppStack() {
               color={colors.white}
             />
           ),
-          tabBarLabelStyle: { fontFamily: 'Comfortaa-Medium' },
         }}
       />
     </Tab.Navigator>
@@ -135,11 +134,7 @@ const RootNavigator = () => {
           backgroundColor: colors.white,
         }}
       >
-        <ActivityIndicator
-          size={'large'}
-          style={{ transform: [{ scale: 1.5 }] }}
-          color={colors.primary}
-        />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

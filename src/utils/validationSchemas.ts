@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import { isValidPhoneFormat } from './basicValidations';
 
 export const loginValidationSchema = yup.object().shape({
   email: yup
@@ -32,4 +33,16 @@ export const registerValidationSchema = yup.object().shape({
     .min(6, 'Şifre en az 6 karakter olmalı.')
     .max(12, 'Şifre en fazla 12 karakter olmalı.')
     .required('Şifre zorunludur.'),
+});
+
+export const accountDetailsValidationSchema = yup.object().shape({
+  name: yup.string().required('İsim zorunludur'),
+  surname: yup.string().required('Soyisim zorunludur'),
+  phone: yup
+    .string()
+    .test('is-valid-phone', 'Geçerli bir telefon numarası girin', value => {
+      if (!value) return true;
+      return isValidPhoneFormat(value);
+    }),
+  bio: yup.string().max(120, 'Maksimum 120 karakter olabilir'),
 });

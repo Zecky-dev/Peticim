@@ -13,6 +13,8 @@ import { useLoading } from '@context/LoadingContext';
 import { showToast } from '@config/toastConfig';
 
 import ImageResizer from '@bam.tech/react-native-image-resizer';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -20,6 +22,8 @@ const Profile = () => {
     useImagePicker();
   const { showLoading, hideLoading } = useLoading();
 
+  const navigation =
+    useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const [modalVisible, setModalVisible] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
@@ -99,12 +103,15 @@ const Profile = () => {
           <Icon name="plus" type="feather" size={14} color={colors.white} />
         </View>
       </TouchableOpacity>
-      <Text style={styles.nameSurname}>{user?.displayName}</Text>
+      <View>
+        <Text style={styles.nameSurname}>{user?.displayName}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
+      </View>
 
       <View style={styles.profileButtons}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => console.log('İlanlarım')}
+          onPress={() => navigation.navigate('AccountDetails')}
           style={styles.profileButton}
         >
           <Icon

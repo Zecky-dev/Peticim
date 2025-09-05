@@ -5,3 +5,4 @@ export {default as Adoptions} from './Adoptions';
 export {default as AddAdoption} from './AddAdoption';
 export {default as Profile} from './Profile';
 export {default as Favorites} from './Favorites';
+export {default as AccountDetails} from './AccountDetails';

@@ -29,6 +29,11 @@ export default StyleSheet.create({
     fontFamily: 'Comfortaa-Bold',
     fontSize: 16,
   },
+  email: {
+    color: colors.black_50,
+    fontFamily: 'Comfortaa-Bold',
+    fontSize: 13, 
+  },
   profileButton: {
     backgroundColor: colors.primary,
     padding: 12,

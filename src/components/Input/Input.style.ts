@@ -28,42 +28,12 @@ export default StyleSheet.create({
   hideUnhideButton: {
     paddingHorizontal: 4,
   },
-
-  /*
-  
-    outerContainer: {
-    gap: 8,
+  characterCounterContainer: {
+    alignSelf: 'flex-end',
+    bottom: 6,
   },
-  label: {
-    fontFamily: 'Comfortaa-Bold',
-    color: colors.black_50,
-  },
-  phoneInput: {
-    borderColor: colors.gray,
-    borderWidth: 1,
-    padding: 12,
-    borderRadius: 12,
-    fontSize: 16,
-  },
-  hideUnhideButton: {
-    paddingHorizontal: 12,
-  },
-  input: {
-    paddingHorizontal: 12,
-    color: colors.black,
-    fontFamily: 'Comfortaa-Medium',
-    fontSize: 16,
-    flex: 1,
-  },
-  errorText: {
-    color: colors.error,
-    fontFamily: 'Comfortaa-Medium',
-    fontSize: 15,
-    marginTop: -6,
-  },
-  errorBorder: {
-    borderWidth: 1,
-    borderColor: colors.error,
-  },
-  */
+  characterCounterText: {
+    fontFamily: 'Comfortaa-SemiBold',
+    fontSize: 13,
+  }
 });

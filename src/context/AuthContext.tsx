@@ -5,12 +5,14 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
+  getIdToken,
+  onIdTokenChanged,
 } from '@react-native-firebase/auth';
 import { generateErrorMessage } from '@firebase/helpers/generateErrorMessage';
 import { sendVerificationEmail, sendPasswordResetEmail } from '@api/auth';
 import { useLoading } from './LoadingContext';
 import { doc, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
-import { auth, db } from '@firebase/firebase';
+import { app, auth, db } from '@firebase/firebase';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -20,6 +22,7 @@ interface AuthProviderProps {
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
+  token: string | null;
   initializing: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string, otherData: any) => Promise<void>;
@@ -30,15 +33,26 @@ interface AuthContextType {
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
   const { showLoading, hideLoading } = useLoading();
 
-  function onAuthStateChangedCallback(user: FirebaseAuthTypes.User | null) {
-    if (user && !user.emailVerified) {
-      setUser(null);
+  async function onAuthStateChangedCallback(
+    user: FirebaseAuthTypes.User | null,
+  ) {
+    if (user) {
+      if (!user.emailVerified) {
+        setUser(null);
+        setToken(null);
+      } else {
+        setUser(user);
+        const idToken = await getIdToken(user);
+        console.log('TOKEN', idToken);
+        setToken(idToken || null);
+      }
     } else {
-      setUser(user);
+      setUser(null);
+      setToken(null);
     }
-
     if (initializing) {
       setInitializing(false);
     }
@@ -47,6 +61,18 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, onAuthStateChangedCallback);
     return subscriber;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onIdTokenChanged(auth, async user => {
+      if (user) {
+        const idToken = await getIdToken(user, true);
+        setToken(idToken);
+      } else {
+        setToken(null);
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -58,8 +84,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         password,
       );
       const user = userCredential.user;
-      const idToken = await user.getIdToken();
-      console.log('ID_TOKEN', idToken);
       if (!user.emailVerified) {
         const error: any = new Error('E-posta adresi doğrulanmamış.');
         error.code = 'auth/email-not-verified';
@@ -137,6 +161,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     register,
     logout,
     passwordReset,
+    token,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

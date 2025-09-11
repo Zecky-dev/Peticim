@@ -8,14 +8,14 @@ export default StyleSheet.create({
     gap: 12,
   },
   avatar: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 128,
+    height: 128,
+    borderRadius: 64,
   },
   plusContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     position: 'absolute',
     bottom: 0,
     right: 0,
@@ -27,20 +27,20 @@ export default StyleSheet.create({
   },
   nameSurname: {
     fontFamily: 'Comfortaa-Bold',
-    fontSize: 16,
+    fontSize: 20,
   },
   email: {
     color: colors.black_50,
     fontFamily: 'Comfortaa-Bold',
-    fontSize: 13, 
+    fontSize: 16, 
   },
   profileButton: {
     backgroundColor: colors.primary,
     padding: 12,
-    width: 200,
+    width: 250,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 10,
     flexDirection: 'row',
     gap: 4,
   },
@@ -50,7 +50,7 @@ export default StyleSheet.create({
   },
   profileButtonText: {
     fontFamily: 'Comfortaa-Medium',
-    fontSize: 12,
+    fontSize: 14,
     color: colors.white,
   },
   modalContainer: {
@@ -92,5 +92,5 @@ export default StyleSheet.create({
   optionButton: {
     alignItems: 'center',
     padding: 12,
-  },
+  }
 });

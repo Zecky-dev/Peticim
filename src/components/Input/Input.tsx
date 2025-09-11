@@ -25,7 +25,7 @@ type InputProps = {
   placeholder?: string;
   customStyles?: CustomStyle;
   secureContent?: boolean;
-  error?: string;ƒ
+  error?: string;
   maxLength?: number;
   value?: string;
   showCharacterCount?: boolean;
@@ -68,6 +68,7 @@ const Input = ({
         {label && (
           <Text style={[styles.label, customStyles?.label]}>{label}</Text>
         )}
+
         <View style={[styles.inputContainer, customStyles?.inputContainer]}>
           <TextInput
             secureTextEntry={hidden}
@@ -77,13 +78,12 @@ const Input = ({
             maxLength={maxLength}
             onChangeText={text => {
               setCharacterCount(text.length);
-              if (rest.onChangeText) {
-                rest.onChangeText(text);
-              }
+              if (rest.onChangeText) rest.onChangeText(text);
             }}
-            value={value} // Pass value to TextInput
+            value={value}
             {...rest}
           />
+
           {secureContent && (
             <TouchableOpacity
               onPress={() => setHidden(!hidden)}
@@ -96,21 +96,20 @@ const Input = ({
               />
             </TouchableOpacity>
           )}
+
           {maxLength && showCharacterCount && (
-            <View style={styles.characterCounterContainer}>
-              <Text
-                style={[
-                  styles.characterCounterText,
-                  { color: getCounterColor() },
-                ]}
-              >
-                {characterCount}/{maxLength}
-              </Text>
-            </View>
+            <Text
+              style={[
+                styles.characterCounterText,
+                { color: getCounterColor() },
+              ]}
+            >
+              {characterCount}/{maxLength}
+            </Text>
           )}
         </View>
+        {error && <Alert withIcon={false} message={error} />}
       </View>
-      {error && <Alert withIcon={false} message={error} />}
     </>
   );
 };

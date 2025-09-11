@@ -5,7 +5,6 @@ class Storage {
     try {
       const serializedValue = JSON.stringify(value);
       await AsyncStorage.setItem(key, serializedValue);
-      console.log(`Veri başarıyla kaydedildi: ${key}`);
     } catch (error: any) {
       console.log(`Veri kaydetme hatası (${key}):`, error);
       throw error;
@@ -32,7 +31,6 @@ class Storage {
   public async removeItem(key: string): Promise<void> {
     try {
       await AsyncStorage.removeItem(key);
-      console.log(`Veri başarıyla silindi: ${key}`);
     } catch (error: any) {
       console.log(`Veri silme hatası (${key}):`, error);
       throw error;

@@ -14,13 +14,14 @@ export const useImagePicker = () => {
     try {
       const result = await launchImageLibrary({
         mediaType: 'photo',
-        selectionLimit: 1,
+        selectionLimit: 8,
         ...options,
       });
 
       if (result.didCancel) return;
       if (result.assets) {
         setImages(result.assets);
+        return result.assets;
       }
     } catch (error) {
       console.log('PICK_IMAGE_FROM_GALLERY_ERROR:', error);
@@ -36,9 +37,7 @@ export const useImagePicker = () => {
       });
 
       if (result.didCancel) return;
-      if (result.assets) {
-        setImages(result.assets);
-      }
+      if (result.assets) setImages(result.assets);
     } catch (error) {
       console.log('PICK_IMAGE_FROM_CAMERA_ERROR:', error);
     }

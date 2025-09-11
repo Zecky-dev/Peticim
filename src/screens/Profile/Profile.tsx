@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import Modal from 'react-native-modal';
 import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@components';
-import Modal from 'react-native-modal';
-import styles from './Profile.style';
-import colors from '@utils/colors';
-
 import { useAuth } from '@context/AuthContext';
 import { useImagePicker } from '@hooks/useImagePicker';
-import { uploadImages } from '@api/image';
 import { useLoading } from '@context/LoadingContext';
-import { showToast } from '@config/toastConfig';
-
-import ImageResizer from '@bam.tech/react-native-image-resizer';
 import { useNavigation } from '@react-navigation/native';
+import { uploadImages } from '@api/image';
+import { showToast } from '@config/toastConfig';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import styles from './Profile.style';
+import colors from '@utils/colors';
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -54,15 +52,8 @@ const Profile = () => {
       try {
         setModalVisible(false);
         showLoading();
-        const resizedImage = await ImageResizer.createResizedImage(
-          images[0].uri as string,
-          400,
-          400,
-          'JPEG',
-          100,
-        );
         const uploadResult = await uploadImages(
-          [resizedImage],
+          [images[0]],
           'profile_images',
           user.uid,
         );
@@ -77,6 +68,7 @@ const Profile = () => {
           type: 'error',
           text1: 'Hata',
           text2: error.message,
+          duration: 'medium',
         });
       } finally {
         setImages([]);
@@ -100,7 +92,7 @@ const Profile = () => {
           style={styles.avatar}
         />
         <View style={styles.plusContainer}>
-          <Icon name="plus" type="feather" size={14} color={colors.white} />
+          <Icon name="plus" type="feather" size={18} color={colors.white} />
         </View>
       </TouchableOpacity>
       <View>
@@ -120,7 +112,6 @@ const Profile = () => {
             color={colors.white}
             size={18}
           />
-
           <Text style={styles.profileButtonText}>Hesap Detaylarım</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -163,7 +154,13 @@ const Profile = () => {
             <TouchableOpacity
               activeOpacity={0.6}
               style={styles.optionButton}
-              onPress={() => pickFromCamera()}
+              onPress={() =>
+                pickFromCamera({
+                  maxWidth: 400,
+                  maxHeight: 400,
+                  mediaType: 'photo',
+                })
+              }
             >
               <Icon
                 name="camera-outline"
@@ -178,7 +175,11 @@ const Profile = () => {
               activeOpacity={0.6}
               style={styles.optionButton}
               onPress={() => {
-                pickFromLibrary();
+                pickFromLibrary({
+                  maxWidth: 400,
+                  maxHeight: 400,
+                  mediaType: 'photo',
+                });
               }}
             >
               <Icon

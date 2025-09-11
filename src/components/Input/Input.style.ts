@@ -14,8 +14,8 @@ export default StyleSheet.create({
     paddingVertical: 2,
     borderWidth: 1,
     borderRadius: 12,
-    fontSize: 16,
     flexDirection: 'row',
+    fontSize: 16,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -28,12 +28,12 @@ export default StyleSheet.create({
   hideUnhideButton: {
     paddingHorizontal: 4,
   },
-  characterCounterContainer: {
-    alignSelf: 'flex-end',
-    bottom: 6,
-  },
   characterCounterText: {
-    fontFamily: 'Comfortaa-SemiBold',
+    fontFamily: 'Comfortaa-Bold',
     fontSize: 13,
+    alignSelf: 'flex-end',
+    position: "absolute",
+    right: 4,
+    bottom: 4
   }
 });

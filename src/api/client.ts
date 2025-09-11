@@ -8,6 +8,8 @@ import {
   API_URL,
 } from '@env';
 
+console.log(API_URL);
+
 const getBaseURL = () => {
   const OS = Platform.OS;
   const isEmulator = DeviceInfo.isEmulatorSync();
@@ -15,11 +17,7 @@ const getBaseURL = () => {
 
   if (IS_DEV) {
     if (OS === 'android') {
-      if (isEmulator) {
-        return ANDROID_EMULATOR_DEV_URL;
-      } else {
-        return ANDROID_PHYSICAL_DEV_URL;
-      }
+      return isEmulator ? ANDROID_EMULATOR_DEV_URL : ANDROID_PHYSICAL_DEV_URL;
     } else {
       return IOS_EMULATOR_DEV_URL;
     }
@@ -27,8 +25,6 @@ const getBaseURL = () => {
     return API_URL;
   }
 };
-
-console.log(getBaseURL())
 
 const axiosClient = axios.create({
   baseURL: getBaseURL(),
@@ -38,7 +34,6 @@ const axiosClient = axios.create({
   },
 });
 
-
 axiosClient.interceptors.response.use(
   response => response,
   error => {
@@ -46,11 +41,9 @@ axiosClient.interceptors.response.use(
       console.log('Hata Durum Kodu:', error.response.status);
       console.log('Hata Verisi:', error.response.data);
       console.log('Hata Başlıkları:', error.response.headers);
-    }
-    else if (error.request) {
+    } else if (error.request) {
       console.log('Yanıt Alınamadı:', error.request);
-    }
-    else {
+    } else {
       console.log('Hata:', error.message);
     }
     console.log('Hata Konfigürasyonu:', error.config);

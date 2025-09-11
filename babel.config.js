@@ -26,6 +26,8 @@ module.exports = {
           '@api/*': './src/api/*',
           '@hooks': './src/hooks',
           '@hooks/*': './src/hooks/*',
+          '@constants': './src/contants',
+          '@constants/*': './src/constants/*',
         },
       },
     ],

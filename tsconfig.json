@@ -21,6 +21,8 @@
       "@api/*": ["./api/*"],
       "@hooks": ["./hooks"],
       "@hooks/*": ["./hooks/*"],
+      "@constants": ["./constants"],
+      "@constants/*": ["./constants/*"],
     }
   },
 }

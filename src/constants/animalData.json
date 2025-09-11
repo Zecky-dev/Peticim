@@ -1,0 +1,127 @@
+[
+  {
+    "type": "Kedi",
+    "breeds": [
+      "Tekir (Yerli Kedi)",
+      "Ankara Kedisi",
+      "Van Kedisi",
+      "Siyam",
+      "İran Kedisi",
+      "British Shorthair",
+      "Scottish Fold",
+      "Ragdoll",
+      "Maine Coon",
+      "Bengal",
+      "Sfenks",
+      "Norveç Orman Kedisi",
+      "Russian Blue",
+      "American Shorthair",
+      "Abyssinian",
+      "Burmese",
+      "Exotic Shorthair",
+      "Cornish Rex",
+      "Devon Rex"
+    ]
+  },
+  {
+    "type": "Köpek",
+    "breeds": [
+      "Golden Retriever",
+      "Labrador Retriever",
+      "Alman Kurdu",
+      "Sibirya Kurdu (Husky)",
+      "Pomeranian",
+      "Pug",
+      "Dachshund (Sosis Köpek)",
+      "Chihuahua",
+      "Bulldog",
+      "Kangal (Anadolu Çoban Köpeği)",
+      "Rottweiler",
+      "Doberman",
+      "Fransız Bulldog",
+      "Beagle",
+      "Shih Tzu",
+      "Poodle (Kaniş)",
+      "Cocker Spaniel",
+      "Border Collie",
+      "Boxer",
+      "Yorkshire Terrier",
+      "Maltese",
+      "Bichon Frise",
+      "Dalmaçyalı",
+      "Samoyed",
+      "St. Bernard",
+      "Great Dane",
+      "Akita Inu",
+      "Basset Hound",
+      "Cane Corso",
+      "Çin Aslanı (Chow Chow)"
+    ]
+  },
+  {
+    "type": "Kuş",
+    "breeds": [
+      "Muhabbet Kuşu",
+      "Kanarya",
+      "Sultan Papağanı",
+      "Cennet Papağanı",
+      "Hint Bülbülü",
+      "Zebra İspinozu",
+      "Gouldian İspinozu",
+      "Pakistan Papağanı",
+      "Jako (Afrika Gri Papağanı)",
+      "Kakadu",
+      "Macaw",
+      "Papağan",
+      "Rosella",
+      "Kırmızıbaşlı Kırmızı Papağan"
+    ]
+  },
+  {
+    "type": "Kemirgen",
+    "breeds": [
+      "Hamster",
+      "Gine Domuzu (Kobay)",
+      "Tavşan",
+      "Chinchilla",
+      "Gerbil",
+      "Sincap",
+      "Degus"
+    ]
+  },
+  {
+    "type": "Balık",
+    "breeds": [
+      "Japon Balığı",
+      "Lepistes",
+      "Beta (Siyam Kavgacı Balığı)",
+      "Neon Tetra",
+      "Melek Balığı",
+      "Çöpçü Balığı",
+      "Vatoz Balığı",
+      "Kılıçkuyruk",
+      "Moli",
+      "Plati",
+      "Discus",
+      "Koi",
+      "Gurami",
+      "Akvaryum Yılanbalığı"
+    ]
+  },
+  {
+    "type": "Sürüngen",
+    "breeds": [
+      "Kaplumbağa",
+      "Su Kaplumbağası",
+      "İguana",
+      "Bukalemun",
+      "Leopar Gekosu",
+      "Sakallı Ejderha",
+      "Leopar Kaplumbağası"
+    ]
+  },
+  {
+    "type": "Diğer",
+    "breeds": ["Kirpi"]
+  }
+]

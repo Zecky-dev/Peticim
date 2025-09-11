@@ -6,3 +6,4 @@ export {default as AddAdoption} from './AddAdoption';
 export {default as Profile} from './Profile';
 export {default as Favorites} from './Favorites';
 export {default as AccountDetails} from './AccountDetails';
+export {default as AdoptionDetails} from './AdoptionDetails';

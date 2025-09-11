@@ -19,6 +19,7 @@ import {
   Favorites,
   ForgotPassword,
   AccountDetails,
+  AdoptionDetails,
 } from '@screens';
 import LoadingProvider from '@context/LoadingContext';
 import AuthProvider, { useAuth } from '@context/AuthContext';
@@ -43,6 +44,13 @@ const ProfileStack = () => (
   </Stack.Navigator>
 );
 
+const AdoptionStacks = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Adoptions" component={Adoptions} />
+    <Stack.Screen name="AdoptionDetails" component={AdoptionDetails} />
+  </Stack.Navigator>
+);
+
 function AppStack() {
   return (
     <Tab.Navigator
@@ -55,11 +63,12 @@ function AppStack() {
         headerTitleAlign: 'center',
         tabBarLabelStyle: { fontFamily: 'Comfortaa-Medium' },
         tabBarHideOnKeyboard: true,
+        headerShown: false,
       }}
     >
       <Tab.Screen
         name="Adoptions"
-        component={Adoptions}
+        component={AdoptionStacks}
         options={{
           title: 'İlanlar',
           tabBarIcon: ({ focused }) => (
@@ -70,6 +79,7 @@ function AppStack() {
               color={colors.white}
             />
           ),
+          popToTopOnBlur: true,
         }}
       />
       <Tab.Screen
@@ -103,7 +113,7 @@ function AppStack() {
         }}
       />
       <Tab.Screen
-        name="Profile"
+        name="ProfileTab"
         component={ProfileStack}
         options={{
           title: 'Profil',
@@ -115,6 +125,7 @@ function AppStack() {
               color={colors.white}
             />
           ),
+          popToTopOnBlur: true,
         }}
       />
     </Tab.Navigator>

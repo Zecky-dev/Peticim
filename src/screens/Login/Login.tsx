@@ -13,17 +13,16 @@ import {
   useFocusEffect,
   RouteProp,
 } from '@react-navigation/native';
-import { Alert, Checkbox, Input } from '@components';
+import { Checkbox, Input } from '@components';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { Formik } from 'formik';
 import { loginValidationSchema } from '@utils/validationSchemas';
 import { showToast } from '@config/toastConfig';
 import { useLoading } from '@context/LoadingContext';
+import { useAuth } from '@context/AuthContext';
 import Storage from '@utils/storage';
 import styles from './Login.style';
-import { useAuth } from '@context/AuthContext';
 
 const REMEMBER_ME_KEY = 'rememberMe';
 const EMAIL_KEY = 'email';
@@ -39,8 +38,8 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [initialValues, setInitialValues] = useState({
-    email: route.params?.prefilledEmail || '',
-    password: '',
+    email: route.params?.prefilledEmail || 'zkcndnmez@gmail.com',
+    password: 'Test123',
   });
 
   useEffect(() => {

@@ -4,105 +4,30 @@ import {
   View,
   ScrollView,
   KeyboardAvoidingView,
-  PermissionsAndroid,
   Alert,
 } from 'react-native';
-import Geolocation from 'react-native-geolocation-service';
+import styles from './AccountDetails.style';
 import { BackButton, Button, Input } from '@components';
 import { useAuth } from '@context/AuthContext';
 import { Formik } from 'formik';
 import { accountDetailsValidationSchema } from '@utils/validationSchemas';
 import { useLoading } from '@context/LoadingContext';
 import { useUserDetails } from '@hooks/useUserDetails';
-import styles from './AccountDetails.style';
 
-import axios from 'axios';
 import { doc, setDoc } from '@react-native-firebase/firestore';
 import { db } from '@firebase/firebase';
+import useLocation from '@hooks/useLocation';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { showToast } from '@config/toastConfig';
 
 const AccountDetails = () => {
   const { user } = useAuth();
   const { showLoading, hideLoading } = useLoading();
-  const { userDetails } = useUserDetails();
+  // `user` null olabilir, bu yüzden `user?.uid` kullanıyoruz.
+  const { userDetails } = useUserDetails(user?.uid || null); 
+  const { getLocationInfo } = useLocation();
+
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const name = user?.displayName?.split(' ')[0] || '';
-  const surname = user?.displayName?.split(' ')[1] || '';
-
-  const getAddressInfo = async (): Promise<{
-    latitude: number;
-    longitude: number;
-    formattedAddress: string;
-  } | null> => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Konum İzni',
-          message: 'Adresinizi eklemek için konumunuza erişmemiz gerekiyor.',
-          buttonNegative: 'Reddet',
-          buttonPositive: 'İzin Ver',
-        },
-      );
-
-      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        Alert.alert(
-          'İzin Gerekli',
-          'Adresinizi belirleyebilmeniz için konum izni vermeniz gerekir',
-          [{ text: 'Tamam', style: 'default' }],
-        );
-        return null;
-      }
-
-      showLoading();
-
-      const position = await new Promise<Geolocation.GeoPosition>(
-        (resolve, reject) =>
-          Geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 10000,
-          }),
-      );
-
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-
-      const addressInfo = (
-        await axios.get(
-          `https://nominatim.openstreetmap.org/reverse?format=geojson&lat=${latitude}&lon=${longitude}`,
-          {
-            headers: { 'User-Agent': 'PeticimApp/1.0 (info@peticimapp.com)' },
-          },
-        )
-      ).data;
-
-      const feature = addressInfo.features[0];
-      let formattedAddress = '';
-
-      if (feature?.properties?.address) {
-        const addr = feature.properties.address;
-        formattedAddress = [
-          addr.road,
-          addr.suburb,
-          addr.town,
-          addr.province,
-          addr.country,
-        ]
-          .filter(Boolean)
-          .join(', ');
-      } else if (feature?.properties?.display_name) {
-        formattedAddress = feature.properties.display_name;
-      }
-
-      return { latitude, longitude, formattedAddress };
-    } catch (err) {
-      console.warn(err);
-      return null;
-    } finally {
-      hideLoading();
-    }
-  };
 
   const updateUserDetails = async (values: any) => {
     if (!user?.uid) return;
@@ -123,7 +48,11 @@ const AccountDetails = () => {
     try {
       showLoading();
       await setDoc(userRef, dataToUpdate, { merge: true });
-      Alert.alert('Başarılı', 'Hesap detaylarınız güncellendi.');
+      showToast({
+        type: 'success',
+        text1: 'Başarılı',
+        text2: 'Hesap detaylarınız güncellendi.'
+      })
     } catch (err) {
       console.error(err);
       Alert.alert('Hata', 'Bilgiler güncellenirken bir hata oluştu.');
@@ -133,8 +62,8 @@ const AccountDetails = () => {
   };
 
   const initialValues = {
-    name: name,
-    surname: surname,
+    name: userDetails?.name,
+    surname: userDetails?.surname,
     phone: userDetails?.phone || '',
     bio: userDetails?.bio || '',
     address: userDetails?.address || {
@@ -145,12 +74,12 @@ const AccountDetails = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top']} style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}
         behavior="padding"
         enabled
-        keyboardVerticalOffset={110}
+        keyboardVerticalOffset={10}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -165,7 +94,7 @@ const AccountDetails = () => {
               initialValues={initialValues}
               enableReinitialize
               validationSchema={accountDetailsValidationSchema}
-              onSubmit={(values) => updateUserDetails(values)}
+              onSubmit={values => updateUserDetails(values)}
             >
               {({
                 handleChange,
@@ -235,7 +164,7 @@ const AccountDetails = () => {
                     <Button
                       label="Adres Ekle"
                       onPress={async () => {
-                        const addressObj = await getAddressInfo();
+                        const addressObj = await getLocationInfo();
                         if (addressObj) {
                           setFieldValue('address', addressObj);
                         }
@@ -275,7 +204,7 @@ const AccountDetails = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 };
 

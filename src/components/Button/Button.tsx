@@ -18,6 +18,7 @@ type ButtonProps = {
     container?: ViewStyle;
     label?: TextStyle;
   };
+  disabled?: boolean;
   outline?: boolean;
 } & TouchableOpacityProps;
 
@@ -28,6 +29,7 @@ const Button = ({
   backgroundColor = colors.primary,
   additionalStyles,
   outline,
+  disabled = false,
   ...rest
 }: ButtonProps) => {
   return (
@@ -37,8 +39,10 @@ const Button = ({
         additionalStyles?.container,
         { backgroundColor: outline ? 'transparent' : backgroundColor },
         outline && { borderColor: backgroundColor, borderWidth: 1 },
+        disabled && { opacity: 0.5 }
       ]}
       activeOpacity={0.8}
+      disabled={disabled}
       {...rest}
     >
       {icon && icon}

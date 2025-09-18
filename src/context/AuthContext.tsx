@@ -1,18 +1,15 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { FirebaseAuthTypes, updateProfile } from '@react-native-firebase/auth';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
   getIdToken,
   onIdTokenChanged,
 } from '@react-native-firebase/auth';
-import { generateErrorMessage } from '@firebase/helpers/generateErrorMessage';
-import { sendVerificationEmail, sendPasswordResetEmail } from '@api/auth';
+import { sendPasswordResetEmail } from '@api/auth';
 import { useLoading } from './LoadingContext';
-import { doc, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
-import { app, auth, db } from '@firebase/firebase';
+import { auth } from '@firebase/firebase';
+import { signInUser, signUpUser } from '@firebase/authService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -24,7 +21,7 @@ interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
   token: string | null;
   initializing: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, otherData: any) => Promise<void>;
   logout: () => Promise<void>;
   passwordReset: (email: string) => Promise<void>;
@@ -46,7 +43,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         setUser(user);
         const idToken = await getIdToken(user);
-        console.log('TOKEN', idToken);
         setToken(idToken || null);
       }
     } else {
@@ -78,21 +74,9 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     try {
       showLoading();
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      const user = userCredential.user;
-      if (!user.emailVerified) {
-        const error: any = new Error('E-posta adresi doğrulanmamış.');
-        error.code = 'auth/email-not-verified';
-        throw error;
-      }
-      return true;
+      await signInUser(email.toLowerCase(), password);
     } catch (error: any) {
-      console.log('LOGIN_ERROR', error);
-      throw new Error(generateErrorMessage(error.code));
+      throw error;
     } finally {
       hideLoading();
     }
@@ -101,28 +85,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   const register = async (email: string, password: string, otherData: any) => {
     try {
       showLoading();
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      const user = userCredential.user;
-      if (user) {
-        await setDoc(doc(db, 'Users', user.uid), {
-          email,
-          ...otherData,
-          createdAt: serverTimestamp(),
-        });
-        await updateProfile(user, {
-          displayName: `${otherData.name} ${otherData.surname}`,
-          photoURL: otherData.profilePicture || null,
-        });
-        await sendVerificationEmail(email);
-        await logout();
-      }
+      await signUpUser(email, password, otherData);
+      await logout();
     } catch (error: any) {
-      console.log('REGISTER_ERROR', error);
-      throw new Error(generateErrorMessage(error.code));
+      throw error;
     } finally {
       hideLoading();
     }
@@ -133,7 +99,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       showLoading();
       await signOut(auth);
     } catch (error: any) {
-      throw new Error('Çıkış yapılırken bir hata oluştu.');
+      console.error('LOGOUT_ERROR', error);
     } finally {
       hideLoading();
     }
@@ -144,11 +110,8 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       showLoading();
       await sendPasswordResetEmail(email);
     } catch (error: any) {
-      console.log('PASSWORD_RESET_ERROR', error);
-      throw new Error(
-        error.message ||
-          'Şifre sıfırlama e-postası gönderilirken bir hata oluştu.',
-      );
+      console.error('PASSWORD_RESET_ERROR', error);
+      throw error;
     } finally {
       hideLoading();
     }

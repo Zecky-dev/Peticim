@@ -9,5 +9,5 @@ export default {
   black_50: 'rgba(0,0,0,0.5)',
   black_40: 'rgba(0,0,0,0.50)',
   gray: '#ccc',
-  primary: '#662c91',
+  primary: '#7916da',
 };

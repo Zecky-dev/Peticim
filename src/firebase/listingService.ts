@@ -10,18 +10,35 @@ import {
   limit,
   FirebaseFirestoreTypes,
   startAfter,
+  deleteDoc,
+  getDoc,
+  updateDoc,
+  arrayRemove,
+  arrayUnion,
+  where,
+  documentId,
 } from '@react-native-firebase/firestore';
-import { uploadImages } from '@api/image';
+import { uploadImages, deleteImages } from '@api/image';
 import { showToast } from '@config/toastConfig';
 
 const listingsCollection = collection(db, 'Listings');
 let lastVisible: FirebaseFirestoreTypes.QueryDocumentSnapshot | null = null;
 
+const applyFilters = (q: any, filters?: Filter[]) => {
+  if (!filters) return q;
+  filters.forEach(filter => {
+    q = query(q, where(filter.field, filter.operator, filter.value));
+  });
+  return q;
+};
+
 export const createListing = async (
   listingData: any,
   images: any[],
   userId: string,
+  token?: string | null,
 ) => {
+  if (!listingData || images.length === 0 || !userId || !token) return;
   try {
     const listingsCollection = collection(db, 'Listings');
     const docRef = doc(listingsCollection);
@@ -36,32 +53,24 @@ export const createListing = async (
       `Listings/${userId}/${listingId}`,
       userId,
       listingId,
+      token,
     );
-    showToast({
-      type: 'success',
-      text1: 'Başarılı!',
-      text2: 'İlanın başarıyla oluşturuldu!',
-    });
-    return { success: true, id: listingId };
-  } catch (err: any) {
-    showToast({
-      type: 'error',
-      text1: 'Hata',
-      text2: 'İlan oluşturulurken bir hata meydana geldi',
-    });
-    return { success: false, error: err.message };
+    return true;
+  } catch (error: any) {
+    console.error('CREATE_LISTING_ERROR', error);
+    return false;
   }
 };
 
-export const getFirstListings = async () => {
+export const getFirstListings = async (filters: Filter[] = []) => {
   try {
-    const q = query(
+    let q = query(
       listingsCollection,
       orderBy('createdAt', 'desc'),
       limit(10),
     );
+    q = applyFilters(q, filters)
     const documentSnapshots = await getDocs(q);
-
     if (documentSnapshots.empty) {
       lastVisible = null;
       return [];
@@ -75,53 +84,116 @@ export const getFirstListings = async () => {
     );
     return listings;
   } catch (error) {
-    console.error('Error fetching first listings: ', error);
-    showToast({
-      type: 'error',
-      text1: 'Hata',
-      text2: 'İlanlar yüklenirken bir hata oluştu.',
-    });
+    console.error('GET_FIRST_LISTINGS_ERROR', error);
     return [];
   }
 };
 
-export const getNextListings = async () => {
-  if (!lastVisible) {
-    console.log('No more documents to load.');
-    return [];
-  }
-
+export const getNextListings = async (filters: Filter[] = []) => {
+  if (!lastVisible) return [];
   try {
-    const q = query(
+    let q = query(
       listingsCollection,
       orderBy('createdAt', 'desc'),
       startAfter(lastVisible),
       limit(10),
     );
+    q = applyFilters(q, filters);
     const documentSnapshots = await getDocs(q);
-
     if (documentSnapshots.empty) {
       lastVisible = null;
       return [];
     }
-
     lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-
     const listings = documentSnapshots.docs.map(
       (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
         id: doc.id,
         ...doc.data(),
       }),
     );
-
     return listings;
   } catch (error) {
-    console.error('Error fetching next listings: ', error);
+    console.error('GET_NEXT_LISTING_ERROR', error);
+    return [];
+  }
+};
+
+export const deleteListing = async (
+  listingId: string,
+  userId?: string,
+  token?: string | null,
+) => {
+  if (!listingId || !userId || !token) return;
+  try {
+    const docRef = doc(db, 'Listings', listingId);
+    await deleteDoc(docRef);
+    await deleteImages(userId, listingId, token);
+  } catch (error: any) {
+    console.error('DELETE_LISTING_ERROR', error);
+  }
+};
+
+export const toggleFavorite = async (listingId?: string, userId?: string) => {
+  if (!listingId || !userId) {
     showToast({
       type: 'error',
       text1: 'Hata',
-      text2: 'İlanlar yüklenirken bir hata oluştu.',
+      text2: 'Geçersiz parametreler.',
     });
+    return false;
+  }
+
+  try {
+    const userRef = doc(db, 'Users', userId);
+    const userDoc = await getDoc(userRef);
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const favorites = userData?.favorites || [];
+      if (favorites.includes(listingId)) {
+        await updateDoc(userRef, {
+          favorites: arrayRemove(listingId),
+        });
+        return true;
+      } else {
+        await updateDoc(userRef, {
+          favorites: arrayUnion(listingId),
+        });
+        return true;
+      }
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error('TOGGLE_FAVORITE_ERROR', error);
+    showToast({
+      type: 'error',
+      text1: 'Hata',
+      text2: 'Favori durumu güncellenirken bir sorun oluştu.',
+    });
+    return false;
+  }
+};
+
+export const getListingsByIds = async (listingIds: string[]) => {
+  if (!listingIds || listingIds.length === 0) {
+    return [];
+  }
+  try {
+    const q = query(listingsCollection, where(documentId(), 'in', listingIds));
+    const documentSnapshots = await getDocs(q);
+
+    if (documentSnapshots.empty) {
+      return [];
+    }
+    const listings = documentSnapshots.docs.map(
+      (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
+        id: doc.id,
+        ...doc.data(),
+      }),
+    );
+    return listings;
+  } catch (error) {
+    console.error('GET_LISTINGS_BY_IDS_ERROR', error);
     return [];
   }
 };

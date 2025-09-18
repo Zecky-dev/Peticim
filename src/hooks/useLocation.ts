@@ -1,8 +1,8 @@
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
-import Geolocation, { GeoPosition } from 'react-native-geolocation-service';
-import axios from 'axios';
 import { useLoading } from '@context/LoadingContext';
 import { showToast } from '@config/toastConfig';
+import Geolocation, { GeoPosition } from 'react-native-geolocation-service';
+import axios from 'axios';
 
 const useLocation = () => {
   const { showLoading, hideLoading } = useLoading();
@@ -72,8 +72,10 @@ const useLocation = () => {
         ]
           .filter(Boolean)
           .join(', ');
-        city = addr.province;
-        district = addr.town;
+        console.log(addr);
+        city = addr.province || addr.city || addr.town || addr.state || '';
+        district =
+          addr.district || addr.suburb || addr.county || addr.town || '';
       } else if (feature?.properties?.display_name) {
         formattedAddress = feature.properties.display_name;
       }

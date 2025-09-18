@@ -55,6 +55,7 @@ const Icon = ({
       break;
     case 'feather':
       IconComponent = FeatherIcon;
+      break;
     case 'oct':
       IconComponent = OctIcon;
       break;

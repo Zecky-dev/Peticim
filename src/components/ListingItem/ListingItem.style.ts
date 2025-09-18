@@ -1,10 +1,74 @@
 import colors from '@utils/colors';
 import { StyleSheet } from 'react-native';
 export default StyleSheet.create({
+  container: {  
+    
+  },
+  imageContainer: {
+    width: '100%',
+    height: 180,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  infoContainer: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8
+  },
+  title: {
+    color: colors.white,
+    fontSize: 15,
+    fontFamily: 'Comfortaa-Bold',
+  },
+  animalBreed: {
+    color: colors.white_50,
+    fontSize: 14,
+    fontFamily: 'Comfortaa-Bold',
+  },
+  infoRowWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  infoRowValue: {
+    color: colors.white,
+    fontFamily: 'Comfortaa-Medium',
+    fontSize: 12,
+  },
+  rightContainer: {
+    gap: 8,
+  },
+  favoriteButton: {
+    position: "absolute",
+    right: 12,
+    top: 12,
+    borderWidth: 1,
+    borderColor: colors.white,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+
+
+  
+  /*
   container: {
-    backgroundColor: colors.white,
     borderRadius: 12,
-    elevation: 5,
   },
   title: {
     color: colors.white,
@@ -19,14 +83,15 @@ export default StyleSheet.create({
   },
   favoriteButton: {
     position: 'absolute',
-    right: 16,
-    top: 16,
+    right: 10,
+    top: 10,
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.error,
+    borderColor: colors.white,
+    borderWidth: 1,
   },
   infoContainer: {
     backgroundColor: colors.primary,
@@ -53,7 +118,7 @@ export default StyleSheet.create({
   infoRowsContainer: { gap: 4, justifyContent: 'center' },
   imageContainer: {
     width: '100%',
-    height: 180,
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -67,15 +132,30 @@ export default StyleSheet.create({
   mainImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
-  },
-  fullScreenModalContainer: {
-    
   },
   fullScreenImage: {
     width: '100%',
     height: '80%',
   },
+  viewCountContainer: {
+    position: 'absolute',
+    top: 16,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    gap: 4,
+  },
+  viewCountText: {
+    fontFamily: 'Comfortaa-Light',
+    fontSize: 12,
+    color: colors.black_50,
+  },
+  */
 });

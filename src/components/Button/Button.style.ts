@@ -8,5 +8,8 @@ export default StyleSheet.create({
         padding: 12,
         borderRadius: 12,
         alignItems: 'center',  
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 4
     },
 });

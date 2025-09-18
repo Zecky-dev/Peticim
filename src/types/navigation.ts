@@ -8,12 +8,19 @@ declare global {
   type ProfileStackParamList = {
     Profile: undefined;
     AccountDetails: undefined;
-  }
+  };
 
   type AdoptionStackParamList = {
-    Adoptions: undefined;
-    AdoptionDetails: { data: ListingItem };
-  }
+    Adoptions: { shouldRefresh?: boolean };
+    AdoptionDetails: { data: ListingItem; shouldRefresh?: boolean };
+    AdoptionOwnerProfile: { ownerData: User | null }
+  };
+
+  type RootTabParamList = {
+    AdoptionStacks: AdoptionStackParamList;
+    AddAdoption: { shouldRefresh?: boolean };
+    ProfileTab: ProfileStackParamList;
+  };
 
   type RootStackParamList = {
     Auth: undefined;

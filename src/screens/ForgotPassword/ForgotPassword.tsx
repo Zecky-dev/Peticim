@@ -10,6 +10,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@context/AuthContext';
 import { isValidEmail, isEmpty } from '@utils/basicValidations';
 import { showToast } from '@config/toastConfig';
+import { generateFirebaseErrorMessage } from '@firebase/helpers/generateFirebaseErrorMessage';
 
 const ForgotPassword = () => {
   const route = useRoute<RouteProp<AuthStackParamList, 'ForgotPassword'>>();
@@ -21,20 +22,33 @@ const ForgotPassword = () => {
   const { passwordReset } = useAuth();
 
   const handleForgotPassword = async () => {
+    setIsSubmitted(true);
+    if (error) return;
     try {
-      if (!error) {
-        await passwordReset(email);
-        showToast({
-          type: 'info',
-          text1: 'E-posta Kontrolü',
-          text2:
-            'Girmiş olduğunuz e-posta adresine şifre sıfırlama bağlantısı gönderildi.',
-          duration: 'long',
-        });
-        navigation.goBack();
-      }
+      await passwordReset(email);
+      showToast({
+        type: 'info',
+        text1: 'E-posta Kontrolü',
+        text2:
+          'Girmiş olduğunuz e-posta adresine (hesabınız varsa) şifre sıfırlama bağlantısı gönderildi.',
+        duration: 'long',
+      });
+      navigation.goBack();
     } catch (error: any) {
-      setError(error.message);
+      console.error('HANDLE_FORGOT_PASSWORD_ERROR', error);
+      if (error.code) {
+        showToast({
+          type: 'error',
+          text1: 'Hata',
+          text2: generateFirebaseErrorMessage(error.code),
+        });
+      } else {
+        showToast({
+          type: 'error',
+          text1: 'Hata',
+          text2: 'Bilinmeyen bir hata oluştu, tekrar deneyiniz.',
+        });
+      }
     }
   };
 

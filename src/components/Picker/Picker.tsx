@@ -5,6 +5,8 @@ import {
   FlatList,
   TouchableOpacity,
   View,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
 import Modal from 'react-native-modal';
 import styles from './Picker.style';
@@ -18,24 +20,39 @@ type PickerProps = {
   value?: string | number | null;
   error?: string;
   onSelect: (value: any) => void;
+  additionalStyles?: {
+    pickerContainer?: ViewStyle;
+    pickerButton?: ViewStyle;
+    pickerButtonText?: TextStyle;
+    pickerLabel?: TextStyle;
+    iconSize?: number;
+  };
 };
 
-const Picker = ({ label, items, value, error, onSelect }: PickerProps) => {
+const Picker = ({
+  label,
+  items,
+  value,
+  error,
+  onSelect,
+  additionalStyles,
+}: PickerProps) => {
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
   const selectedItem = items.find(item => item.value === value);
 
   return (
     <>
-      <View style={styles.pickerContainer}>
-        <View style={styles.pickerButtonContainer}>
-          <Text style={styles.pickerLabel}>{label}</Text>
+      <View style={styles.pickerButtonContainer}>
+        <View style={[styles.pickerContainer, additionalStyles?.pickerContainer]}>
+          <Text style={[styles.pickerLabel, additionalStyles?.pickerLabel]}>{label}</Text>
           <Pressable
             onPress={() => setPickerModalVisible(true)}
-            style={styles.pickerButton}
+            style={[styles.pickerButton, additionalStyles?.pickerButton]}
           >
             <Text
               style={[
                 styles.pickerButtonText,
+                additionalStyles?.pickerButtonText,
                 !value && { color: colors.black_50 },
               ]}
             >
@@ -47,7 +64,7 @@ const Picker = ({ label, items, value, error, onSelect }: PickerProps) => {
               name="caret-down"
               type="ion"
               color={colors.black_50}
-              size={18}
+              size={additionalStyles?.iconSize || 18}
             />
           </Pressable>
         </View>

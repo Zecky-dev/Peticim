@@ -6,23 +6,28 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import styles from './Register.style';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { BackButton, Button, Alert, Input } from '@components';
-import { Formik } from 'formik';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { registerValidationSchema } from '@utils/validationSchemas';
 
-import { showToast } from '@config/toastConfig';
+import { Formik } from 'formik';
 import { CommonActions, useNavigation } from '@react-navigation/native';
+import { showToast } from '@config/toastConfig';
+import { registerValidationSchema } from '@utils/validationSchemas';
+import { generateFirebaseErrorMessage } from '@firebase/helpers/generateFirebaseErrorMessage';
 import { useAuth } from '@context/AuthContext';
-import { useLoading } from '@context/LoadingContext';
+
+import colors from '@utils/colors';
+import styles from './Register.style';
+
 
 const Register = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { register } = useAuth();
-  const { hideLoading } = useLoading();
 
   const handleRegister = async (
     email: string,
@@ -30,7 +35,7 @@ const Register = () => {
     otherData: any,
   ) => {
     try {
-      await register(email, password, otherData);
+      await register(email.toLowerCase(), password, otherData);
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -50,20 +55,31 @@ const Register = () => {
         duration: 'long',
       });
     } catch (error: any) {
-      showToast({
-        type: 'error',
-        text1: 'Hata!',
-        text2: error.message,
-      });
-    } finally {
-      hideLoading();
+      if (error.code) {
+        showToast({
+          type: 'error',
+          text1: 'Hata',
+          text2: generateFirebaseErrorMessage(error.code),
+        });
+      } else {
+        showToast({
+          type: 'error',
+          text1: 'Hata',
+          text2: 'Bilinmeyen bir hata oluştu, tekrar deneyiniz.',
+        });
+      }
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={[styles.backButtonContainer, { top: insets.top + 16, left: insets.left + 16}]}>
-        <BackButton size={36} />
+      <View
+        style={[
+          styles.backButtonContainer,
+          { top: insets.top + 16, left: insets.left + 16 },
+        ]}
+      >
+        <BackButton size={36} color={colors.primary} />
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
@@ -115,7 +131,7 @@ const Register = () => {
                       value={values.name}
                       placeholder="İsim"
                     />
-                    {errors.name && touched.name && isSubmitted && (
+                    {errors.name && isSubmitted && (
                       <Alert withIcon={false} message={errors.name} />
                     )}
                   </View>
@@ -127,7 +143,7 @@ const Register = () => {
                       value={values.surname}
                       placeholder="Soyisim"
                     />
-                    {errors.surname && touched.surname && isSubmitted && (
+                    {errors.surname && isSubmitted && (
                       <Alert withIcon={false} message={errors.surname} />
                     )}
                   </View>
@@ -141,7 +157,7 @@ const Register = () => {
                     keyboardType="email-address"
                     value={values.email}
                   />
-                  {errors.email && touched.email && isSubmitted && (
+                  {errors.email && isSubmitted && (
                     <Alert withIcon={false} message={errors.email} />
                   )}
                 </View>
@@ -156,14 +172,17 @@ const Register = () => {
                     keyboardType="default"
                     secureContent={true}
                   />
-                  {errors.password && touched.password && isSubmitted && (
-                    <Alert withIcon={false} message={errors.phone} />
+                  {errors.password && isSubmitted && (
+                    <Alert withIcon={false} message={errors.password} />
                   )}
                 </View>
                 <View style={{ marginTop: 12 }}>
                   <Button
                     label="Kayıt Ol"
-                    onPress={handleSubmit}
+                    onPress={() => {
+                      setIsSubmitted(true);
+                      handleSubmit();
+                    }}
                     disabled={isSubmitting}
                   />
                 </View>

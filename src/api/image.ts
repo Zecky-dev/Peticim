@@ -4,7 +4,8 @@ const uploadImages = async (
   images: any[],
   folder: string,
   userId?: string,
-  listingId?: string,
+  listingId?: string | null,
+  token?: string | null,
 ) => {
   try {
     const formData = new FormData();
@@ -21,30 +22,17 @@ const uploadImages = async (
     const res = await axiosClient.post('/image/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${token}`,
       },
     });
     return res.data;
   } catch (error: any) {
-    if (error.response) {
-      console.error('Upload Error:', error.response.data);
-      throw new Error(error.response.data?.error || 'Yükleme başarısız.');
-    } else {
-      console.error('Bilinmeyen hata:', error.message);
-      throw new Error('Bilinmeyen bir hata oluştu.');
-    }
+    console.error('UPLOAD_IMAGE_ERROR', error);
   }
 };
 
 const classifyAnimal = async (images: any[], token?: string | null) => {
-  if (!token) {
-    console.error('User token missing, cannot classify animals');
-    throw new Error('Kullanıcı doğrulaması yok, işlem yapılamıyor.');
-  }
-  if (!images || images.length === 0) {
-    console.error('No images provided for animal classification');
-    throw new Error('Lütfen en az bir resim yükleyin.');
-  }
-
+  if (!token || images.length === 0) return null;
   try {
     const formData = new FormData();
     images.forEach((image, index) => {
@@ -54,24 +42,20 @@ const classifyAnimal = async (images: any[], token?: string | null) => {
         name: image.fileName || `photo_${index}.jpg`,
       } as any);
     });
-
     const res = await axiosClient.post('/image/classifyAnimal', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
       },
     });
-    return res.data.results;
+    return res.data.results || null;
   } catch (error: any) {
-    console.error(
-      'Animal Check Error:',
-      error?.response?.data || error.message,
-    );
-    throw new Error('Hayvan kontrolü başarısız.');
+    console.error('CLASSIFY_ANIMAL_ERROR', error);
+    return null;
   }
 };
 
-const getImages = async (publicIds: string[], token: string) => {
+const getImages = async (publicIds: string[], token?: string | null) => {
   try {
     const res = await axiosClient.post(
       '/image',
@@ -84,14 +68,28 @@ const getImages = async (publicIds: string[], token: string) => {
     );
     return res.data;
   } catch (error: any) {
-    if (error.response) {
-      console.error('Get Error:', error.response.data);
-      throw new Error('Resimler getirilirken bir hata meydana geldi.');
-    } else {
-      console.error('Bilinmeyen hata:', error.message);
-      throw new Error('Bilinmeyen bir hata oluştu.');
-    }
+    console.error('GET_IMAGES_ERROR', error);
   }
 };
 
-export { uploadImages, getImages, classifyAnimal };
+const deleteImages = async (
+  userId: string,
+  listingId: string,
+  token: string,
+) => {
+  try {
+    const res = await axiosClient.post(
+      '/image/delete',
+      { userId, listingId },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    return res.data;
+  } catch (err: any) {
+    console.error(
+      'DELETE_IMAGES_ERROR error:',
+      err.response?.data || err.message,
+    );
+  }
+};
+
+export { uploadImages, getImages, classifyAnimal, deleteImages };

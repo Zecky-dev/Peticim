@@ -1,104 +1,368 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Button, FlatList, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  FlatList,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
+import { Button, EmptyList, Icon, ListingItem, Picker } from '@components';
+import { resetPagination } from '@firebase/listingService';
+import LottieView from 'lottie-react-native';
 import styles from './Adoptions.style';
 
-import {
-  getFirstListings,
-  getNextListings,
-  resetPagination,
-} from '@firebase/listingService';
-import { getImages } from '@api/image';
+import { useUserDetails } from '@hooks/useUserDetails';
 import { useAuth } from '@context/AuthContext';
-import { ListingItem } from '@components';
-import { useLoading } from '@context/LoadingContext';
+import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native';
+
 import colors from '@utils/colors';
+import animalFilters from '../../constants/animalFilters.json';
+
+import { AD_BANNER_UNIT_ID } from '@env';
+
+import {
+  BannerAd,
+  BannerAdSize,
+  TestIds,
+} from 'react-native-google-mobile-ads';
+import { useListings } from '@hooks/useListings';
+
+import Modal from 'react-native-modal';
+import { getCities, getDistricts } from '@api/location';
+
+const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : AD_BANNER_UNIT_ID;
+
+type LocationState = {
+  cities: PickerItem[];
+  districts: PickerItem[];
+  neighborhoods: PickerItem[];
+  selectedCity: PickerItem | null;
+  selectedDistrict: PickerItem | null;
+  selectedNeighborhood: PickerItem | null;
+};
 
 const Adoptions = () => {
-  const [photoMap, setPhotoMap] = useState<Record<string, string[]>>({});
-  const [listings, setListings] = useState<ListingItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const route = useRoute<RouteProp<AdoptionStackParamList, 'Adoptions'>>();
+  const { user } = useAuth();
+  const { userDetails } = useUserDetails(user?.uid || null);
+
+  const [filters, setFilters] = useState<Filter[]>([]);
+  const [tempFilters, setTempFilters] = useState<Filter[]>([]);
+
+  const [showFavorites, setShowFavorites] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { token } = useAuth();
-  const { showLoading, hideLoading } = useLoading();
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
 
-  const loadInitialData = async (refreshing: boolean = false) => {
-    showLoading();
-    resetPagination();
-    const initialListings = await getFirstListings();
-    setListings(initialListings);
-    await fetchPhotoUrls(initialListings);
-    if (refreshing) setIsRefreshing(false);
-    if (initialListings.length < 10) {
-      setHasMore(false);
-    }
-    hideLoading();
+  // Location filter
+  const [location, setLocation] = useState<LocationState>({
+    cities: [],
+    districts: [],
+    neighborhoods: [],
+    selectedCity: null,
+    selectedDistrict: null,
+    selectedNeighborhood: null,
+  });
+
+  const handleCitySelect = async (city: PickerItem) => {
+    const districtsRes = await getDistricts(Number(city.value));
+
+    setTempFilters(prev => {
+      const withoutCityAndDistrict = prev.filter(
+        f => f.field !== 'address.city' && f.field !== 'address.district',
+      );
+      return [
+        ...withoutCityAndDistrict,
+        { field: 'address.city', operator: '==', value: city.label },
+      ];
+    });
+
+    setLocation(prev => ({
+      ...prev,
+      selectedCity: city,
+      selectedDistrict: null,
+      districts: districtsRes.map((d: any) => ({
+        label: d.name,
+        value: d.id,
+      })),
+    }));
   };
 
-  const loadMoreData = async () => {
-    if (loading || !hasMore) return;
-    showLoading();
-    const nextListings = await getNextListings();
-    setListings(prevListings => [...prevListings, ...nextListings]);
-    await fetchPhotoUrls(nextListings);
-    hideLoading();
-    if (nextListings.length === 0 || nextListings.length < 10) {
-      setHasMore(false);
-    }
-  };
-
-  const fetchPhotoUrls = async (items: ListingItem[]) => {
-    if (!items.length && !token) return;
-    const publicIds = items
-      .flatMap(item => item.images)
-      .map(image => image.publicId);
-    try {
-      const res = await getImages(publicIds, token);
-      if (res.success) {
-        const newPhotoMap: Record<string, string[]> = {};
-        items.forEach(item => {
-          newPhotoMap[item.id] = item.images.map(
-            image => res.urls[image.publicId],
-          );
-        });
-        setPhotoMap(prev => ({ ...prev, ...newPhotoMap }));
-      }
-    } catch (err) {
-      console.error('Error fetching photos:', err);
-    }
+  const handleDistrictSelect = async (district: PickerItem) => {
+    setTempFilters(prev => {
+      const withoutDistrict = prev.filter(f => f.field !== 'address.district');
+      return [
+        ...withoutDistrict,
+        { field: 'address.district', operator: '==', value: district.label },
+      ];
+    });
+    setLocation(prev => ({
+      ...prev,
+      selectedDistrict: district,
+    }));
   };
 
   useEffect(() => {
-    if(!token) return;
-    loadInitialData();
+    const fetchCities = async () => {
+      const citiesRes = await getCities();
+      setLocation(prev => ({
+        ...prev,
+        cities: citiesRes.map((c: any) => ({ label: c.name, value: c.id })),
+      }));
+    };
+    fetchCities();
+  }, []);
+
+  const {
+    listings,
+    loadInitialListings,
+    loadMoreListings,
+    hasLoadedOnce,
+    favoriteListings,
+  } = useListings(filters, showFavorites);
+
+  const { token } = useAuth();
+
+  const renderItem = ({ item }: { item: any }) => {
+    if (item.isAd) {
+      return (
+        <BannerAd
+          unitId={adUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        />
+      );
+    }
+    return (
+      <ListingItem
+        data={item}
+        favorited={userDetails?.favorites?.includes(item.id) || false}
+      />
+    );
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    loadInitialListings();
   }, [token]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.shouldRefresh) {
+        loadInitialListings();
+      }
+    }, [route.params?.shouldRefresh]),
+  );
+
+  const toggleAnimalFilter = (newFilter: Filter) => {
+    setTempFilters(prev => {
+      const isSelected = prev.some(
+        f => f.field === newFilter.field && f.value === newFilter.value,
+      );
+
+      if (isSelected) {
+        return prev.filter(f => f.field !== 'animalType');
+      } else {
+        const withoutAnimalFilters = prev.filter(f => f.field !== 'animalType');
+        return [...withoutAnimalFilters, newFilter];
+      }
+    });
+  };
+
+  const resetTempFiltersAndCloseModal = () => {
+    setTempFilters([]);
+    setFilters([]);
+    setLocation(prev => ({
+      ...prev,
+      selectedCity: null,
+      selectedDistrict: null,
+      districts: [],
+    }));
+    loadInitialListings([]);
+    setFilterModalVisible(false);
+  };
+
+  const applyFilters = () => {
+    if (tempFilters.length > 0) {
+      setFilters(tempFilters);
+      setFilterModalVisible(false);
+      loadInitialListings(tempFilters);
+    } else {
+      setFilterModalVisible(false);
+    }
+  };
 
   return (
-    <SafeAreaView edges={['top']} style={styles.container}>
+    <View style={styles.container}>
+      <BannerAd
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        unitId={adUnitId}
+      />
+      <View style={styles.topContainer}>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            showFavorites && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => setShowFavorites(!showFavorites)}
+        >
+          <Icon
+            name="heart"
+            type="material-community"
+            size={16}
+            color={showFavorites ? colors.white : colors.primary}
+          />
+          <Text
+            style={[
+              styles.filterButtonText,
+              showFavorites && { color: colors.white },
+            ]}
+          >
+            Favoriler
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalVisible(true)}
+        >
+          <Icon name="filter" type="ion" size={18} color={colors.primary} />
+          <Text style={styles.filterButtonText}>Filtrele</Text>
+          {filters.length > 0 && (
+            <View style={styles.filterCountBadge}>
+              <Text style={styles.filterCountBadgeText}>{filters.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={listings}
-        renderItem={({ item }) => {
-          if (photoMap[item.id]) {
-            return <ListingItem data={item} photoURLs={photoMap[item.id]} />;
-          }
-          return null;
-        }}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={
+          listings.length === 0
+            ? styles.emptyListingContainer
+            : styles.listingsContentContainer
+        }
+        data={showFavorites ? favoriteListings : listings}
+        renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         keyExtractor={item => item.id}
-        onEndReached={loadMoreData}
         onEndReachedThreshold={0.5}
+        onEndReached={() => loadMoreListings()}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshing={isRefreshing}
         onRefresh={() => {
           resetPagination();
-          loadInitialData(isRefreshing);
+          loadInitialListings();
+        }}
+        ListEmptyComponent={() => {
+          if (!hasLoadedOnce) {
+            return <ActivityIndicator size={'large'} color={colors.primary} />;
+          }
+          return (
+            <EmptyList
+              label="İlan bulunamadı"
+              image={
+                <LottieView
+                  autoPlay={true}
+                  loop={true}
+                  source={require('@assets/lottie/notFound.json')}
+                  style={styles.notFoundAnimation}
+                />
+              }
+            />
+          );
         }}
       />
-    </SafeAreaView>
+
+      <Modal
+        style={styles.filterModalContainer}
+        isVisible={filterModalVisible}
+        onBackButtonPress={() => setFilterModalVisible(false)}
+        onBackdropPress={() => setFilterModalVisible(false)}
+      >
+        <View style={styles.filterModalContentContainer}>
+          {/* Hayvan türü seçimi */}
+          {filters.length > 0 && (
+            <Pressable onPress={resetTempFiltersAndCloseModal}>
+              <Text style={styles.resetFiltersText}>Filtreleri Sıfırla</Text>
+            </Pressable>
+          )}
+
+          <View>
+            <Text style={styles.filterTitle}>Hayvan Türü</Text>
+            <View style={styles.filterButtonsContainer}>
+              {Object.entries(animalFilters).map(([key, filter]) => {
+                const isSelected = tempFilters.some(
+                  f => f.field === filter.field && f.value === filter.value,
+                );
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    onPress={() => {
+                      toggleAnimalFilter(filter as Filter);
+                    }}
+                    style={[
+                      styles.filterButton,
+                      {
+                        backgroundColor: isSelected
+                          ? colors.primary
+                          : 'transparent',
+                        borderColor: isSelected
+                          ? 'transparent'
+                          : colors.primary,
+                        borderWidth: 1,
+                      },
+                    ]}
+                  >
+                    <Icon
+                      name={
+                        key === 'cat'
+                          ? 'cat'
+                          : key === 'dog'
+                          ? 'dog'
+                          : key === 'bird'
+                          ? 'bird'
+                          : key === 'fish'
+                          ? 'fish'
+                          : 'dots-horizontal'
+                      }
+                      type="material-community"
+                      size={24}
+                      color={isSelected ? 'white' : colors.primary}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        { color: isSelected ? 'white' : colors.primary },
+                      ]}
+                    >
+                      {filter.value}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+          <Picker
+            items={location.cities}
+            label="Şehir"
+            value={location.selectedCity?.value || null}
+            onSelect={handleCitySelect}
+          />
+
+          {location.selectedCity && (
+            <Picker
+              label="İlçe"
+              items={location.districts}
+              value={location.selectedDistrict?.value || null}
+              onSelect={handleDistrictSelect}
+            />
+          )}
+          <View style={{ marginTop: 6 }}>
+            <Button label="Filtre Uygula" onPress={applyFilters} />
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 

@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import Modal from 'react-native-modal';
-import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Linking,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Icon } from '@components';
+import { Button, Icon } from '@components';
 import { useAuth } from '@context/AuthContext';
 import { useImagePicker } from '@hooks/useImagePicker';
 import { useLoading } from '@context/LoadingContext';
@@ -15,7 +23,7 @@ import styles from './Profile.style';
 import colors from '@utils/colors';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const { images, setImages, pickFromCamera, pickFromLibrary } =
     useImagePicker();
   const { showLoading, hideLoading } = useLoading();
@@ -46,6 +54,10 @@ const Profile = () => {
     );
   };
 
+  const sendContactEmail = () => {
+    Linking.openURL('mailto:peticimapp@gmail.com');
+  };
+
   useEffect(() => {
     const handleUserAvatarChange = async () => {
       if (!images || images.length === 0 || !user?.uid) return;
@@ -56,6 +68,8 @@ const Profile = () => {
           [images[0]],
           'profile_images',
           user.uid,
+          null,
+          token,
         );
         setAvatarUri(uploadResult.uploadedImages[0].secureUrl);
         showToast({
@@ -79,7 +93,7 @@ const Profile = () => {
   }, [images, user?.uid]);
 
   return (
-    <SafeAreaView edges={['bottom']} style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity onPress={() => setModalVisible(true)}>
         <Image
           source={
@@ -95,46 +109,96 @@ const Profile = () => {
           <Icon name="plus" type="feather" size={18} color={colors.white} />
         </View>
       </TouchableOpacity>
-      <View>
+      <View style={{ alignItems: 'center' }}>
         <Text style={styles.nameSurname}>{user?.displayName}</Text>
         <Text style={styles.email}>{user?.email}</Text>
       </View>
 
       <View style={styles.profileButtons}>
-        <TouchableOpacity
-          activeOpacity={0.8}
+        <Button
+          label="Hesap Detaylarım"
           onPress={() => navigation.navigate('AccountDetails')}
-          style={styles.profileButton}
-        >
-          <Icon
-            name="person-outline"
-            type="ion"
-            color={colors.white}
-            size={18}
-          />
-          <Text style={styles.profileButtonText}>Hesap Detaylarım</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={0.8}
+          icon={
+            <Icon
+              name="person-outline"
+              type="ion"
+              color={colors.white}
+              size={18}
+            />
+          }
+          additionalStyles={{
+            label: styles.profileButtonText,
+            container: styles.profileButton,
+          }}
+        />
+        <Button
+          label="İlanlarım"
+          onPress={() => navigation.navigate('MyAdoptionListings')}
+          icon={
+            <Icon
+              name="document-text-outline"
+              type="ion"
+              color={colors.white}
+              size={18}
+            />
+          }
+          additionalStyles={{
+            label: styles.profileButtonText,
+            container: styles.profileButton,
+          }}
+        />
+        <Button
+          label="Bize Ulaş"
+          onPress={sendContactEmail}
+          icon={
+            <Icon
+              name="mail-outline"
+              type="ion"
+              color={colors.white}
+              size={18}
+            />
+          }
+          additionalStyles={{
+            label: styles.profileButtonText,
+            container: styles.profileButton,
+          }}
+          backgroundColor={colors.info}
+        />
+        <Button
+          label="Değerlendir"
           onPress={() => console.log('İlanlarım')}
-          style={styles.profileButton}
-        >
-          <Icon
-            name="document-text-outline"
-            type="ion"
-            color={colors.white}
-            size={18}
-          />
-          <Text style={styles.profileButtonText}>İlanlarım</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={0.8}
+          icon={
+            <Icon
+              name="star-outline"
+              type="ion"
+              color={colors.white}
+              size={18}
+            />
+          }
+          additionalStyles={{
+            label: styles.profileButtonText,
+            container: styles.profileButton,
+          }}
+          backgroundColor={colors.warning}
+        />
+
+        <Button
+          label="Çıkış Yap"
           onPress={handleLogout}
-          style={[styles.profileButton, { backgroundColor: colors.error }]}
-        >
-          <Icon name="logout" type="material" color={colors.white} size={18} />
-          <Text style={styles.profileButtonText}>Çıkış Yap</Text>
-        </TouchableOpacity>
+          icon={
+            <Icon
+              name="logout"
+              type="material"
+              color={colors.white}
+              size={18}
+            />
+          }
+          additionalStyles={{
+            label: styles.profileButtonText,
+            container: styles.profileButton,
+          }}
+          backgroundColor={colors.error}
+        />
       </View>
 
       <Modal
@@ -193,7 +257,7 @@ const Profile = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 

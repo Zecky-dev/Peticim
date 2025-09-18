@@ -19,11 +19,11 @@ import { db } from '@firebase/firebase';
 import useLocation from '@hooks/useLocation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { showToast } from '@config/toastConfig';
+import colors from '@utils/colors';
 
 const AccountDetails = () => {
   const { user } = useAuth();
   const { showLoading, hideLoading } = useLoading();
-  // `user` null olabilir, bu yüzden `user?.uid` kullanıyoruz.
   const { userDetails } = useUserDetails(user?.uid || null); 
   const { getLocationInfo } = useLocation();
 
@@ -74,7 +74,7 @@ const AccountDetails = () => {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}
         behavior="padding"
@@ -87,7 +87,7 @@ const AccountDetails = () => {
         >
           <View>
             <View style={{ marginBottom: 16 }}>
-              <BackButton size={36} />
+              <BackButton size={36} color={colors.primary}/>
             </View>
 
             <Formik
@@ -204,7 +204,7 @@ const AccountDetails = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

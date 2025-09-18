@@ -1,0 +1,22 @@
+{
+  "cat": {
+    "field": "animalType",
+    "operator": "==",
+    "value": "Kedi"
+  },
+  "dog": {
+    "field": "animalType",
+    "operator": "==",
+    "value": "Köpek"
+  },
+  "bird": {
+    "field": "animalType",
+    "operator": "==",
+    "value": "Kuş"
+  },
+  "fish": {
+    "field": "animalType",
+    "operator": "==",
+    "value": "Balık"
+  }
+}

@@ -4,6 +4,7 @@ export {default as ForgotPassword} from './ForgotPassword';
 export {default as Adoptions} from './Adoptions';
 export {default as AddAdoption} from './AddAdoption';
 export {default as Profile} from './Profile';
-export {default as Favorites} from './Favorites';
 export {default as AccountDetails} from './AccountDetails';
 export {default as AdoptionDetails} from './AdoptionDetails';
+export {default as MyAdoptionListings} from './MyAdoptionListings';
+export {default as AdoptionOwnerProfile} from './AdoptionOwnerProfile'

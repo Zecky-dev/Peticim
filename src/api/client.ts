@@ -8,9 +8,7 @@ import {
   API_URL,
 } from '@env';
 
-console.log(API_URL);
-
-const getBaseURL = () => {
+export const getBaseURL = () => {
   const OS = Platform.OS;
   const isEmulator = DeviceInfo.isEmulatorSync();
   const IS_DEV = __DEV__;
@@ -46,7 +44,6 @@ axiosClient.interceptors.response.use(
     } else {
       console.log('Hata:', error.message);
     }
-    console.log('Hata Konfigürasyonu:', error.config);
     return Promise.reject(error);
   },
 );

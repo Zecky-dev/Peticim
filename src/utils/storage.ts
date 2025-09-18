@@ -1,41 +1,31 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
 
-class Storage {
-  public async saveItem(key: string, value: any): Promise<void> {
-    try {
-      const serializedValue = JSON.stringify(value);
-      await AsyncStorage.setItem(key, serializedValue);
-    } catch (error: any) {
-      console.log(`Veri kaydetme hatası (${key}):`, error);
-      throw error;
-    }
+export const saveCredentials = async (email: string, password: string) => {
+  try {
+    await Keychain.setGenericPassword(email, password);
+    return true;
+  } catch (error) {
+    return false;
   }
+};
 
-  public async getItem(key: string): Promise<any | null> {
-    try {
-      const serializedValue = await AsyncStorage.getItem(key);
-      if (serializedValue !== null) {
-        try {
-          return JSON.parse(serializedValue);
-        } catch (parseError) {
-          return serializedValue;
-        }
-      }
-      return null;
-    } catch (error: any) {
-      console.log(`Veri okuma hatası (${key}):`, error);
-      throw error;
+export const getCredentials = async () => {
+  try {
+    const credentials = await Keychain.getGenericPassword();
+    if (credentials) {
+      return { email: credentials.username, password: credentials.password };
     }
+    return null;
+  } catch (error) {
+    return null;
   }
+};
 
-  public async removeItem(key: string): Promise<void> {
-    try {
-      await AsyncStorage.removeItem(key);
-    } catch (error: any) {
-      console.log(`Veri silme hatası (${key}):`, error);
-      throw error;
-    }
+export const removeCredentials = async () => {
+  try {
+    await Keychain.resetGenericPassword();
+    return true;
+  } catch (error) {
+    return false;
   }
-}
-
-export default new Storage();
+};

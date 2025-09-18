@@ -1,3 +1,4 @@
+import { showToast } from '@config/toastConfig';
 import axiosClient from './client';
 
 const sendVerificationEmail = async (email: string) => {
@@ -7,13 +8,12 @@ const sendVerificationEmail = async (email: string) => {
     });
     return res.data;
   } catch (error: any) {
-    if (error.response) {
-      console.error('Hata:', error.response.data);
-      throw new Error(error.response.data);
-    } else {
-      console.error('Bilinmeyen bir hata oluştu:', error.message);
-      throw new Error('Bilinmeyen bir hata oluştu.');
-    }
+    console.error('SEND_VERIFICATION_EMAIL_ERROR', error);
+    showToast({
+      type: 'error',
+      text1: 'Hata',
+      text2: error.message,
+    });
   }
 };
 
@@ -24,13 +24,7 @@ const sendPasswordResetEmail = async (email: string) => {
     });
     return res.data;
   } catch (error: any) {
-    if (error.response) {
-      console.error('Hata:', error.response.data);
-      throw new Error(error.response.data);
-    } else {
-      console.error('Bilinmeyen bir hata oluştu:', error.message);
-      throw new Error('Bilinmeyen bir hata oluştu.');
-    }
+    console.error('SEND_PASSWORD_RESET_EMAIL_ERROR', error);
   }
 };
 

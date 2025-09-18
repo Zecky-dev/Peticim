@@ -19,46 +19,45 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Formik } from 'formik';
 import { loginValidationSchema } from '@utils/validationSchemas';
 import { showToast } from '@config/toastConfig';
-import { useLoading } from '@context/LoadingContext';
 import { useAuth } from '@context/AuthContext';
-import Storage from '@utils/storage';
+import { generateFirebaseErrorMessage } from '@firebase/helpers/generateFirebaseErrorMessage';
+import {
+  getCredentials,
+  removeCredentials,
+  saveCredentials,
+} from '@utils/storage';
 import styles from './Login.style';
 
-const REMEMBER_ME_KEY = 'rememberMe';
-const EMAIL_KEY = 'email';
-const PASSWORD_KEY = 'password';
-
 const Login = () => {
+  // Hooks
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const route = useRoute<RouteProp<AuthStackParamList, 'Login'>>();
-  const { showLoading, hideLoading } = useLoading();
   const { login } = useAuth();
 
+  // States
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [initialValues, setInitialValues] = useState({
-    email: route.params?.prefilledEmail || 'zkcndnmez@gmail.com',
-    password: 'Test123',
+    email: route.params?.prefilledEmail || '',
+    password: '',
   });
 
+  // Hooks
   useEffect(() => {
     const loadRememberedCredentials = async () => {
       try {
-        const storedRememberMe = await Storage.getItem(REMEMBER_ME_KEY);
-        if (storedRememberMe === 'true') {
+        const credentials = await getCredentials();
+        if (credentials) {
+          setInitialValues({
+            email: credentials.email,
+            password: credentials.password,
+          });
           setRememberMe(true);
-          const storedEmail = await Storage.getItem(EMAIL_KEY);
-          const storedPassword = await Storage.getItem(PASSWORD_KEY);
-          if (storedEmail && storedPassword) {
-            setInitialValues({
-              email: storedEmail,
-              password: storedPassword,
-            });
-          }
         }
       } catch (error) {
-        console.log('Failed to load credentials from storage:', error);
+        console.error('Failed to load credentials from storage:', error);
+        setRememberMe(false);
       }
     };
     loadRememberedCredentials();
@@ -72,31 +71,26 @@ const Login = () => {
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      showLoading();
       await login(email, password);
       if (rememberMe) {
-        await Promise.all([
-          Storage.saveItem(REMEMBER_ME_KEY, 'true'),
-          Storage.saveItem(EMAIL_KEY, email),
-          Storage.saveItem(PASSWORD_KEY, password),
-        ]);
+        await saveCredentials(email, password);
       } else {
-        await Promise.all([
-          Storage.removeItem(REMEMBER_ME_KEY),
-          Storage.removeItem(EMAIL_KEY),
-          Storage.removeItem(PASSWORD_KEY),
-        ]);
+        await removeCredentials();
       }
     } catch (error: any) {
-      console.log('HANDLE_LOGIN_ERROR', error);
-      showToast({
-        type: 'error',
-        text1: 'Hata!',
-        text2: error.message,
-        duration: 'medium',
-      });
-    } finally {
-      hideLoading();
+      if (error.code) {
+        showToast({
+          type: 'error',
+          text1: 'Hata',
+          text2: generateFirebaseErrorMessage(error.code),
+        });
+      } else {
+        showToast({
+          type: 'error',
+          text1: 'Hata',
+          text2: 'Bilinmeyen bir hata oluştu, tekrar deneyiniz.',
+        });
+      }
     }
   };
 
@@ -110,7 +104,6 @@ const Login = () => {
           source={require('@assets/images/logo.png')}
           style={styles.logo}
         />
-
         <View style={styles.loginContainer}>
           <Formik
             initialValues={initialValues}
@@ -129,7 +122,6 @@ const Login = () => {
               errors,
               touched,
               isSubmitting,
-              resetForm,
             }) => {
               return (
                 <View style={styles.form}>

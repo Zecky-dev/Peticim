@@ -2,7 +2,7 @@
   {
     "type": "Kedi",
     "breeds": [
-      "Tekir (Yerli Kedi)",
+      "Tekir",
       "Ankara Kedisi",
       "Van Kedisi",
       "Siyam",
@@ -35,13 +35,13 @@
       "Dachshund (Sosis Köpek)",
       "Chihuahua",
       "Bulldog",
-      "Kangal (Anadolu Çoban Köpeği)",
+      "Kangal",
       "Rottweiler",
       "Doberman",
       "Fransız Bulldog",
       "Beagle",
       "Shih Tzu",
-      "Poodle (Kaniş)",
+      "Poodle",
       "Cocker Spaniel",
       "Border Collie",
       "Boxer",
@@ -55,7 +55,7 @@
       "Akita Inu",
       "Basset Hound",
       "Cane Corso",
-      "Çin Aslanı (Chow Chow)"
+      "Çin Aslanı"
     ]
   },
   {
@@ -69,7 +69,7 @@
       "Zebra İspinozu",
       "Gouldian İspinozu",
       "Pakistan Papağanı",
-      "Jako (Afrika Gri Papağanı)",
+      "Jako",
       "Kakadu",
       "Macaw",
       "Papağan",
@@ -81,7 +81,7 @@
     "type": "Kemirgen",
     "breeds": [
       "Hamster",
-      "Gine Domuzu (Kobay)",
+      "Gine Domuzu",
       "Tavşan",
       "Chinchilla",
       "Gerbil",
@@ -94,7 +94,7 @@
     "breeds": [
       "Japon Balığı",
       "Lepistes",
-      "Beta (Siyam Kavgacı Balığı)",
+      "Beta",
       "Neon Tetra",
       "Melek Balığı",
       "Çöpçü Balığı",

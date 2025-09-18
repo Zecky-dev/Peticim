@@ -19,7 +19,6 @@ import { useLoading } from '@context/LoadingContext';
 import { useAuth } from '@context/AuthContext';
 import { useImagePicker } from '@hooks/useImagePicker';
 import {
-  CommonActions,
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
@@ -34,13 +33,14 @@ import Modal from 'react-native-modal';
 import useLocation from '@hooks/useLocation';
 import { getCities, getNeighborhoods, getDistricts } from '@api/location';
 import { showToast } from '@config/toastConfig';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 const { width } = Dimensions.get('window');
 
-const MultiStepForm = () => {
+const AddAdoption = () => {
   // Hooks
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<BottomTabNavigationProp<RootTabParamList, 'AddAdoption'>>();
   const { images, setImages, pickFromLibrary } = useImagePicker();
   const { user, token } = useAuth();
   const { showLoading, hideLoading } = useLoading();
@@ -120,8 +120,6 @@ const MultiStepForm = () => {
     setSelectedNeighborhood(neighborhood);
   };
 
-  const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
-
   // Refs
   const lottieRefStep2 = useRef<LottieView>(null);
   const lottieRefStep3 = useRef<LottieView>(null);
@@ -177,9 +175,7 @@ const MultiStepForm = () => {
   };
 
   const handleTypeChange = (type: string) => {
-    console.log(type);
     formik.setFieldValue('animalType', type);
-    formik.setFieldTouched('animalType', true, true);
     formik.setFieldValue('animalBreed', '');
     const selectedAnimalType = animalData.find(a => a.type === type);
     const breeds =
@@ -204,19 +200,19 @@ const MultiStepForm = () => {
       sterilized: formik.values.sterilized,
       phone: formik.values.phone,
       address: formik.values.address,
+      views: 0,
     };
-    const result = await createListing(
+    const createListingSuccess = await createListing(
       listingData,
       formik.values.photos,
       user.uid,
+      token,
     );
-    if (result?.success) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Adoptions' }],
-        }),
-      );
+    if (createListingSuccess) {
+      navigation.navigate('AdoptionStacks', {
+        screen: 'Adoptions',
+        params: { shouldRefresh: true },
+      });
     }
     hideLoading();
     formik.setSubmitting(false);
@@ -231,34 +227,31 @@ const MultiStepForm = () => {
         maxHeight: 800,
         maxWidth: 800,
       });
-
       if (!pickedImages || pickedImages.length === 0) return;
 
       // Tüm fotoğrafları sınıflandır
       const results = await classifyAnimal(pickedImages, token);
+      if (results) {
+        const validImages = pickedImages.filter(
+          (_, index) => results[index].isAnimal,
+        );
+        const nonAnimalCount = pickedImages.length - validImages.length;
 
-      // Hayvan olmayan fotoğrafları filtrele
-      const validImages = pickedImages.filter(
-        (_, index) => results[index].isAnimal,
-      );
-      const nonAnimalCount = pickedImages.length - validImages.length;
-
-      if (nonAnimalCount > 0) {
-        showToast({
-          type: 'error',
-          text1: 'Hata',
-          text2: `Sadece hayvan fotoğrafları yükleyebilirsiniz. ${nonAnimalCount} fotoğraf reddedildi.`,
-        });
+        if (nonAnimalCount > 0) {
+          showToast({
+            type: 'error',
+            text1: 'Hata',
+            text2: `Sadece hayvan fotoğrafları yükleyebilirsiniz. ${nonAnimalCount} fotoğraf reddedildi.`,
+          });
+        }
+        formik.setFieldValue('photos', validImages);
+        setImages(validImages);
       }
-
-      formik.setFieldValue('photos', validImages);
-      setImages(validImages);
-    } catch (err) {
-      console.error('Hayvan kontrolü hatası:', err);
+    } catch (err: any) {
       showToast({
         type: 'error',
         text1: 'Hata',
-        text2: 'Fotoğraflar kontrol edilemedi. Lütfen tekrar deneyin.',
+        text2: err.message,
       });
       formik.setFieldValue('photos', []);
       setImages([]);
@@ -306,7 +299,6 @@ const MultiStepForm = () => {
 
     return () => backHandler.remove();
   }, [currentStep]);
-
 
   useEffect(() => {
     const getAddressCoordinate = async () => {
@@ -368,12 +360,12 @@ const MultiStepForm = () => {
   );
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={20}
+        keyboardVerticalOffset={10}
       >
         <ScrollView style={{ flex: 1 }}>
           <Animated.View
@@ -652,8 +644,8 @@ const MultiStepForm = () => {
           </View>
         </Modal>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
-export default MultiStepForm;
+export default AddAdoption;

@@ -4,37 +4,58 @@ import {
   updateProfile,
 } from '@react-native-firebase/auth';
 import { auth, db } from './firebase';
-import { generateErrorMessage } from './helpers/generateErrorMessage';
 import { sendVerificationEmail } from '@api/auth';
 import { doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { showToast } from '@config/toastConfig';
 
-const register = async (email: string, password: string, otherData: any) => {
+const createUserAccount = async (email: string, password: string) => {
+  const userCredential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password,
+  );
+  return userCredential.user;
+};
+
+const saveUserData = async (uid: string, email: string, otherData: any) => {
+  await setDoc(doc(db, 'Users', uid), {
+    email,
+    ...otherData,
+    createdAt: serverTimestamp(),
+  });
+};
+
+const updateUserProfile = async (user: any, otherData: any) => {
+  await updateProfile(user, {
+    displayName: `${otherData.name} ${otherData.surname}`,
+    photoURL: otherData.profilePicture || null,
+  });
+};
+
+const sendVerification = async (email: string) => {
+  await sendVerificationEmail(email);
+};
+
+// EXPORTED FUNCTIONS
+
+export const signUpUser = async (
+  email: string,
+  password: string,
+  otherData: any,
+) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password,
-    );
-    const user = userCredential.user;
+    const user = await createUserAccount(email, password);
     if (user) {
-      await setDoc(doc(db, 'Users', user.uid), {
-        email,
-        ...otherData,
-        createdAt: serverTimestamp(),
-      });
-      await updateProfile(user, {
-        displayName: `${otherData.name} ${otherData.surname}`,
-        photoURL: otherData.profilePicture || null,
-      });
-      await sendVerificationEmail(email);
+      await saveUserData(user.uid, email, otherData);
+      await updateUserProfile(user, otherData);
+      await sendVerification(email);
     }
   } catch (error: any) {
-    console.log(error);
-    throw new Error(generateErrorMessage(error.code));
+    throw error;
   }
 };
 
-const login = async (email: string, password: string) => {
+export const signInUser = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(
       auth,
@@ -43,17 +64,15 @@ const login = async (email: string, password: string) => {
     );
     const user = userCredential.user;
     if (!user.emailVerified) {
-      await auth.signOut();
-      const error: any = new Error('E-posta adresi doğrulanmamış.');
-      error.code = 'auth/email-not-verified';
-      throw error;
+      showToast({
+        type: 'error',
+        text1: 'Hata',
+        text2: 'E-posta adresi onaylanmamış.'
+      })
     }
-    console.log('LOGIN_SUCCESS');
     return true;
   } catch (error: any) {
-    console.log('LOGIN_ERROR', error);
-    throw new Error(generateErrorMessage(error.code));
+    console.error('SIGN_IN_USER_ERROR', error);
+    throw error;
   }
 };
-
-export { login, register };

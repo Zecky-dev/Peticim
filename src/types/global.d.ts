@@ -27,6 +27,7 @@ interface ListingItem {
     latitude: number;
     longitude: number;
   };
+  views: number;
 }
 
 interface User {
@@ -44,5 +45,13 @@ interface User {
     publicId: string;
     uploadedAt: Date;
   };
+  profilePictureURL: string;
   surname: string;
+  favorites: string[];
+}
+
+interface Filter {
+  field: string;
+  operator: '<' | '<=' | '==' | '!=' | '>' | '>=' | 'array-contains' | 'in';
+  value: any;
 }

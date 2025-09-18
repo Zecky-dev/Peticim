@@ -1,4 +1,7 @@
 {
   "name": "Peticim",
-  "displayName": "Peticim"
+  "displayName": "Peticim",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-1871077443093626~5754015120"
+  }
 }

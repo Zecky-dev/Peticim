@@ -2,10 +2,11 @@ import colors from '@utils/colors';
 import { StyleSheet } from 'react-native';
 export default StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
+    paddingBottom: 40,
+    flexGrow: 1,
   },
   avatar: {
     width: 128,

@@ -1,30 +1,36 @@
 import * as React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@config/toastConfig';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  getFocusedRouteNameFromRoute,
+  NavigationContainer,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-
 import {
   Adoptions,
   Login,
   Register,
   AddAdoption,
   Profile,
-  Favorites,
   ForgotPassword,
   AccountDetails,
   AdoptionDetails,
+  MyAdoptionListings,
+  AdoptionOwnerProfile
 } from '@screens';
+import { HeaderLogo, Icon } from '@components';
+
 import LoadingProvider from '@context/LoadingContext';
 import AuthProvider, { useAuth } from '@context/AuthContext';
+
 import colors from '@utils/colors';
-import { Icon } from '@components';
+import styles from './App.style';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -41,6 +47,7 @@ const ProfileStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Profile" component={Profile} />
     <Stack.Screen name="AccountDetails" component={AccountDetails} />
+    <Stack.Screen name="MyAdoptionListings" component={MyAdoptionListings} />
   </Stack.Navigator>
 );
 
@@ -48,28 +55,31 @@ const AdoptionStacks = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Adoptions" component={Adoptions} />
     <Stack.Screen name="AdoptionDetails" component={AdoptionDetails} />
+    <Stack.Screen name="AdoptionOwnerProfile" component={AdoptionOwnerProfile}/>
   </Stack.Navigator>
 );
 
 function AppStack() {
   return (
     <Tab.Navigator
-      screenOptions={{
-        tabBarStyle: { backgroundColor: colors.primary },
-        tabBarInactiveTintColor: colors.white,
-        tabBarActiveTintColor: colors.white,
-        headerTitleStyle: { color: colors.white },
-        headerStyle: { backgroundColor: colors.primary },
-        headerTitleAlign: 'center',
-        tabBarLabelStyle: { fontFamily: 'Comfortaa-Medium' },
-        tabBarHideOnKeyboard: true,
-        headerShown: false,
+      screenOptions={({ route }) => {
+        return {
+          tabBarStyle: {
+            backgroundColor: colors.primary,
+            display: route.name !== 'AddAdoption' ? 'flex' : 'none',
+          },
+          tabBarInactiveTintColor: colors.white,
+          tabBarActiveTintColor: colors.white,
+          tabBarHideOnKeyboard: true,
+          headerTitle: () => <HeaderLogo />,
+          headerTitleAlign: 'center',
+        };
       }}
     >
       <Tab.Screen
-        name="Adoptions"
+        name="AdoptionStacks"
         component={AdoptionStacks}
-        options={{
+        options={({ navigation, route }) => ({
           title: 'İlanlar',
           tabBarIcon: ({ focused }) => (
             <Icon
@@ -80,42 +90,37 @@ function AppStack() {
             />
           ),
           popToTopOnBlur: true,
-        }}
-      />
-      <Tab.Screen
-        name="Favorites"
-        component={Favorites}
-        options={{
-          title: 'Favoriler',
-          tabBarIcon: ({ focused }) => (
-            <Icon
-              name={focused ? 'heart' : 'heart-outline'}
-              type="ion"
-              size={24}
-              color={colors.white}
-            />
-          ),
-        }}
+          tabBarStyle: (route => {
+            const routeName =
+              getFocusedRouteNameFromRoute(route) ?? 'Adoptions';
+            if (routeName === 'AdoptionDetails' || routeName === 'AdoptionOwnerProfile') {
+              return { display: 'none' };
+            }
+            return { backgroundColor: colors.primary };
+          })(route),
+        })}
       />
       <Tab.Screen
         name="AddAdoption"
         component={AddAdoption}
         options={{
           title: 'İlan Ekle',
-          tabBarIcon: ({ focused }) => (
-            <Icon
-              name={focused ? 'plus-box' : 'plus-box-outline'}
-              type="material-community"
-              size={24}
-              color={colors.white}
-            />
+          tabBarButton: ({ onPress }) => (
+            <TouchableOpacity
+              onPress={onPress}
+              style={styles.addAdoptionTabBarButton}
+              activeOpacity={0.8}
+            >
+              <Icon name="plus" type="feather" size={28} color={colors.white} />
+              <Text style={styles.addAdoptionTabBarButtonText}>İlan Ekle</Text>
+            </TouchableOpacity>
           ),
         }}
       />
       <Tab.Screen
         name="ProfileTab"
         component={ProfileStack}
-        options={{
+        options={({ route }) => ({
           title: 'Profil',
           tabBarIcon: ({ focused }) => (
             <Icon
@@ -125,8 +130,17 @@ function AppStack() {
               color={colors.white}
             />
           ),
-          popToTopOnBlur: true,
-        }}
+          tabBarStyle: (() => {
+            const routeName = getFocusedRouteNameFromRoute(route) ?? 'Profile';
+            if (
+              routeName === 'AccountDetails' ||
+              routeName === 'MyAdoptionListings'
+            ) {
+              return { display: 'none' };
+            }
+            return { backgroundColor: colors.primary };
+          })(),
+        })}
       />
     </Tab.Navigator>
   );
@@ -134,22 +148,13 @@ function AppStack() {
 
 const RootNavigator = () => {
   const { user, initializing } = useAuth();
-
   if (initializing) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.white,
-        }}
-      >
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
-
   return user ? <AppStack /> : <AuthStack />;
 };
 

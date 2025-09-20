@@ -93,5 +93,24 @@ export default StyleSheet.create({
   optionButton: {
     alignItems: 'center',
     padding: 12,
+  },
+  donateModalContainer: {
+    margin: 0,
+  },
+  donateModalContentContainer: {
+    backgroundColor: colors.white,
+    position: "absolute",
+    bottom: 0,
+    padding: 12,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    gap: 16,
+    height: 170
+  },
+  donateModalText: {
+    color: colors.black,
+    fontFamily: 'Comfortaa-Bold',
+    fontSize: 14,
+    textAlign: 'center',
   }
 });

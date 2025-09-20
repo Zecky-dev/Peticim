@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { BackButton, Button, Alert, Input } from '@components';
+import { CircleButton, Button, Alert, Input } from '@components';
 
 import { Formik } from 'formik';
 import { CommonActions, useNavigation } from '@react-navigation/native';
@@ -79,7 +79,7 @@ const Register = () => {
           { top: insets.top + 16, left: insets.left + 16 },
         ]}
       >
-        <BackButton size={36} color={colors.primary} />
+        <CircleButton iconSize={36}/>
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}

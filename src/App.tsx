@@ -22,7 +22,7 @@ import {
   AccountDetails,
   AdoptionDetails,
   MyAdoptionListings,
-  AdoptionOwnerProfile
+  AdoptionOwnerProfile,
 } from '@screens';
 import { HeaderLogo, Icon } from '@components';
 
@@ -48,6 +48,11 @@ const ProfileStack = () => (
     <Stack.Screen name="Profile" component={Profile} />
     <Stack.Screen name="AccountDetails" component={AccountDetails} />
     <Stack.Screen name="MyAdoptionListings" component={MyAdoptionListings} />
+    <Stack.Screen
+      name="AdoptionDetails"
+      component={AdoptionDetails}
+      options={{ presentation: 'modal' }}
+    />
   </Stack.Navigator>
 );
 
@@ -55,7 +60,10 @@ const AdoptionStacks = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Adoptions" component={Adoptions} />
     <Stack.Screen name="AdoptionDetails" component={AdoptionDetails} />
-    <Stack.Screen name="AdoptionOwnerProfile" component={AdoptionOwnerProfile}/>
+    <Stack.Screen
+      name="AdoptionOwnerProfile"
+      component={AdoptionOwnerProfile}
+    />
   </Stack.Navigator>
 );
 
@@ -93,7 +101,10 @@ function AppStack() {
           tabBarStyle: (route => {
             const routeName =
               getFocusedRouteNameFromRoute(route) ?? 'Adoptions';
-            if (routeName === 'AdoptionDetails' || routeName === 'AdoptionOwnerProfile') {
+            if (
+              routeName === 'AdoptionDetails' ||
+              routeName === 'AdoptionOwnerProfile'
+            ) {
               return { display: 'none' };
             }
             return { backgroundColor: colors.primary };
@@ -134,7 +145,8 @@ function AppStack() {
             const routeName = getFocusedRouteNameFromRoute(route) ?? 'Profile';
             if (
               routeName === 'AccountDetails' ||
-              routeName === 'MyAdoptionListings'
+              routeName === 'MyAdoptionListings' ||
+              routeName === 'AdoptionDetails'
             ) {
               return { display: 'none' };
             }

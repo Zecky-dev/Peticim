@@ -1,6 +1,63 @@
 import colors from '@utils/colors';
 import { StyleSheet } from 'react-native';
 export default StyleSheet.create({
+  container: {
+    borderLeftColor: colors.primary,
+    borderLeftWidth: 4,
+    paddingLeft: 4,
+    paddingVertical: 12,
+    backgroundColor: 'whitesmoke',
+    flexDirection: 'row',
+    gap: 8,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+  title: {
+    color: colors.primary,
+    fontFamily: 'Comfortaa-Bold',
+    fontSize: 13,
+  },
+  age: {
+    color: colors.black,
+    fontFamily: 'Comfortaa-Bold',
+    fontSize: 12,
+  },
+  animalType: {
+    color: colors.black_50,
+    fontFamily: 'Comfortaa-Bold',
+    fontSize: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  infoValue: {
+    color: colors.black,
+    fontFamily: 'Comfortaa-Medium',
+    fontSize: 11,
+  },
+  rightContainer: {
+    flex: 1,
+  },
+  rightContainerTop: {
+    flexDirection: 'row',
+    paddingRight: 4,
+    gap:6
+  },
+  rightContainerTopLeft: {
+    flex: 1,
+    flexShrink: 1,
+  }
+
+
+
+  /*
   container: {  
     
   },
@@ -63,6 +120,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   }
+    */
 
 
   

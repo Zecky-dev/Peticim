@@ -7,7 +7,7 @@ import {
   Alert,
 } from 'react-native';
 import styles from './AccountDetails.style';
-import { BackButton, Button, Input } from '@components';
+import { CircleButton, Button, Input } from '@components';
 import { useAuth } from '@context/AuthContext';
 import { Formik } from 'formik';
 import { accountDetailsValidationSchema } from '@utils/validationSchemas';
@@ -87,7 +87,7 @@ const AccountDetails = () => {
         >
           <View>
             <View style={{ marginBottom: 16 }}>
-              <BackButton size={36} color={colors.primary}/>
+              <CircleButton/>
             </View>
 
             <Formik

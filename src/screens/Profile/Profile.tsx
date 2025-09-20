@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Icon } from '@components';
+import { Button, CircleButton, Icon } from '@components';
 import { useAuth } from '@context/AuthContext';
 import { useImagePicker } from '@hooks/useImagePicker';
 import { useLoading } from '@context/LoadingContext';
@@ -32,6 +32,7 @@ const Profile = () => {
     useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const [modalVisible, setModalVisible] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [donateModalVisible, setDonateModalVisible] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -81,7 +82,7 @@ const Profile = () => {
         showToast({
           type: 'error',
           text1: 'Hata',
-          text2: error.message,
+          text2: 'Profil fotoğrafı değiştirilirken bir hata meydana geldi, tekrar deneyiniz.',
           duration: 'medium',
         });
       } finally {
@@ -165,31 +166,25 @@ const Profile = () => {
           backgroundColor={colors.info}
         />
         <Button
-          label="Değerlendir"
-          onPress={() => console.log('İlanlarım')}
-          icon={
-            <Icon
-              name="star-outline"
-              type="ion"
-              color={colors.white}
-              size={18}
-            />
-          }
+          label="Bağış Yap"
+          onPress={() => setDonateModalVisible(true)}
+          icon={<Icon name="heart" type="ion" color={colors.white} size={18} />}
           additionalStyles={{
             label: styles.profileButtonText,
             container: styles.profileButton,
           }}
-          backgroundColor={colors.warning}
+          backgroundColor={colors.error}
         />
 
         <Button
           label="Çıkış Yap"
           onPress={handleLogout}
+          outline={true}
           icon={
             <Icon
               name="logout"
               type="material"
-              color={colors.white}
+              color={colors.error}
               size={18}
             />
           }
@@ -254,6 +249,40 @@ const Profile = () => {
               />
               <Text style={styles.pickOptionText}>Galeri</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        isVisible={donateModalVisible}
+        style={styles.donateModalContainer}
+        onBackButtonPress={() => setDonateModalVisible(false)}
+        onBackdropPress={() => setDonateModalVisible(false)}
+      >
+        <View style={styles.donateModalContentContainer}>
+          <View style={{ position: 'absolute', right: 8, top: 8 }}>
+            <CircleButton
+              onPress={() => setDonateModalVisible(false)}
+              iconColor={colors.black_50}
+              iconName="close-outline"
+              iconType="ion"
+              size={32}
+              iconSize={28}
+            />
+          </View>
+          <View style={{ flex: 1, justifyContent: 'flex-end', gap: 12 }}>
+            <Text style={styles.donateModalText}>
+              Eğer projeye veya geliştiriciye destek olmak isterseniz mesajınız ile birlikte küçük bir
+              bağış yapabilirsiniz 🏠❤️🐈
+            </Text>
+            <Button
+              backgroundColor={colors.success}
+              label="Bağış Yap"
+              onPress={() => {
+                Linking.openURL('https://buymeacoffee.com/zeckydev');
+                setDonateModalVisible(false);
+              }}
+            />
           </View>
         </View>
       </Modal>

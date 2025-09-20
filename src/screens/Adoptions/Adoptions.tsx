@@ -7,7 +7,14 @@ import {
   ActivityIndicator,
   Pressable,
 } from 'react-native';
-import { Button, EmptyList, Icon, ListingItem, Picker } from '@components';
+import {
+  Button,
+  EmptyList,
+  Icon,
+  InformationBox,
+  ListingItem,
+  Picker,
+} from '@components';
 import { resetPagination } from '@firebase/listingService';
 import LottieView from 'lottie-react-native';
 import styles from './Adoptions.style';
@@ -53,6 +60,7 @@ const Adoptions = () => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [informationBoxVisible, setInformationBoxVisible] = useState(true);
 
   // Location filter
   const [location, setLocation] = useState<LocationState>({
@@ -113,13 +121,8 @@ const Adoptions = () => {
     fetchCities();
   }, []);
 
-  const {
-    listings,
-    loadInitialListings,
-    loadMoreListings,
-    hasLoadedOnce,
-    favoriteListings,
-  } = useListings(filters, showFavorites);
+  const { listings, loadInitialListings, loadMoreListings, favoriteListings } =
+    useListings(filters, showFavorites);
 
   const { token } = useAuth();
 
@@ -183,6 +186,7 @@ const Adoptions = () => {
 
   const applyFilters = () => {
     if (tempFilters.length > 0) {
+      setShowFavorites(false);
       setFilters(tempFilters);
       setFilterModalVisible(false);
       loadInitialListings(tempFilters);
@@ -193,14 +197,15 @@ const Adoptions = () => {
 
   return (
     <View style={styles.container}>
-      <BannerAd
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        unitId={adUnitId}
-      />
+      {/* <BannerAd size={BannerAdSize.FULL_BANNER} unitId={adUnitId} /> */}
+      <View style={{ paddingHorizontal: 12 }}>
+        <InformationBox />
+      </View>
       <View style={styles.topContainer}>
         <TouchableOpacity
           style={[
             styles.filterButton,
+            { paddingHorizontal: 24, paddingVertical: 10 },
             showFavorites && { backgroundColor: colors.primary },
           ]}
           onPress={() => setShowFavorites(!showFavorites)}
@@ -221,7 +226,10 @@ const Adoptions = () => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={[
+            styles.filterButton,
+            { paddingHorizontal: 24, paddingVertical: 10 },
+          ]}
           onPress={() => setFilterModalVisible(true)}
         >
           <Icon name="filter" type="ion" size={18} color={colors.primary} />
@@ -250,13 +258,11 @@ const Adoptions = () => {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshing={isRefreshing}
         onRefresh={() => {
+          setIsRefreshing(true);
           resetPagination();
-          loadInitialListings();
+          loadInitialListings(filters).finally(() => setIsRefreshing(false));
         }}
         ListEmptyComponent={() => {
-          if (!hasLoadedOnce) {
-            return <ActivityIndicator size={'large'} color={colors.primary} />;
-          }
           return (
             <EmptyList
               label="İlan bulunamadı"

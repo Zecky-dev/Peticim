@@ -5,6 +5,7 @@ export default StyleSheet.create({
     flex: 1,
     paddingBottom: 12,
     gap: 8,
+    backgroundColor: '#e3e3e3',
   },
   separator: {
     height: 12,
@@ -12,7 +13,7 @@ export default StyleSheet.create({
   topContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   outlineButtonContainer: {
     flexDirection: 'row',
@@ -57,7 +58,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   listingsContentContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingBottom: 40,
   },
   filterButtonsContainer: {
@@ -70,7 +71,7 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 120,
+    minWidth: 115,
     paddingVertical: 4,
     borderRadius: 4,
     gap: 4,
@@ -107,8 +108,32 @@ export default StyleSheet.create({
     color: colors.white,
     fontFamily: 'Comfortaa-Bold',
     fontSize: 10,
+  },
+  informationBox: {
+    marginHorizontal: 12,
+    backgroundColor: colors.info,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  informationText: {
+    color: colors.white,
+    fontFamily: 'Comfortaa-Light',
+    fontSize: 12,
+  },
+  informationBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  informationBoxHeaderText: {
+    fontFamily: 'Comfortaa-Bold',
+    fontSize: 12,
+    color: colors.white,
+  },
+  closeInformationBoxButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
   }
-
-
-
 });

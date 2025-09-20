@@ -24,12 +24,11 @@ import {
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
-import { BackButton, Button, Icon } from '@components';
+import { CircleButton, Button, Icon } from '@components';
 import { useUserDetails } from '@hooks/useUserDetails';
-import { getImages } from '@api/image';
 import { useAuth } from '@context/AuthContext';
 import { incrementListingView } from '@api/listing';
-import { deleteListing } from '@firebase/listingService';
+import { deleteListing, toggleFavorite } from '@firebase/listingService';
 import { useLoading } from '@context/LoadingContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -58,6 +57,13 @@ const AdoptionDetails = () => {
 
   const [views, setViews] = useState<number>(data.views);
   const [visibleFullScreenImage, setVisibleFullScreenImage] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  useEffect(() => {
+    if (userDetails?.favorites) {
+      setIsFavorited(userDetails.favorites.includes(data.id));
+    }
+  }, [userDetails, data.id]);
 
   // Görüntülenme sayısını artır
   useEffect(() => {
@@ -145,33 +151,28 @@ const AdoptionDetails = () => {
     );
   };
 
+  const handleToggleFavorite = async () => {
+    const toggleSuccess = await toggleFavorite(data.id, user?.uid);
+    if (toggleSuccess) {
+      setIsFavorited(!isFavorited);
+    }
+  };
+
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <ScrollView>
-        <BannerAd
-          unitId={adUnitId}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        />
         {/* Fotoğraflar slider */}
-        <View style={{ width: '100%', height: 300 }}>
+        <View style={styles.imageSwiperContainer}>
           <Swiper
             horizontal
             loop={false}
             height={300}
-            dotColor={colors.gray}
-            activeDotColor={colors.white}
+            dotColor={colors.white}
+            activeDotColor={colors.primary}
             style={{ backgroundColor: colors.gray }}
           >
             {data.photoURLs!.map((photoURL, i) => (
-              <Image
-                key={i}
-                style={{
-                  width: '100%',
-                  height: 300,
-                  resizeMode: 'cover',
-                }}
-                source={{ uri: photoURL }}
-              />
+              <Image key={i} style={styles.image} source={{ uri: photoURL }} />
             ))}
           </Swiper>
           <TouchableOpacity
@@ -189,14 +190,151 @@ const AdoptionDetails = () => {
           <View
             style={{
               ...styles.backButtonContainer,
-              top: insets.top + 16,
-              left: insets.left + 16,
+              top: 16,
+              left: 16,
             }}
           >
-            <BackButton color={colors.primary} size={24} />
+            <CircleButton backgroundColor={colors.white} size={48} />
+          </View>
+          <View
+            style={{
+              ...styles.backButtonContainer,
+              top: 16,
+              right: 16,
+            }}
+          >
+            <CircleButton
+              onPress={handleToggleFavorite}
+              backgroundColor={colors.white}
+              iconColor={isFavorited ? colors.error : colors.primary}
+              iconName={isFavorited ? 'heart' : 'heart-outline'}
+              iconType="ion"
+              iconSize={24}
+              size={48}
+            />
+          </View>
+        </View>
+        <View style={{ marginTop: 8 }}>
+          <Text style={styles.title}>{data.title}</Text>
+          <Text style={styles.animalTypeBreed}>
+            {data.animalType} - {data.animalBreed}
+          </Text>
+        </View>
+
+        <View style={{ paddingHorizontal: 8, paddingBottom: 12 }}>
+          <Text style={styles.sectionTitle}>Açıklama</Text>
+          <Text style={styles.descriptionText}>{data.description}</Text>
+          <View style={styles.infoBoxesContainer}>
+            <View style={styles.infoBox}>
+              <Icon
+                name="location-outline"
+                color={colors.primary}
+                type="ion"
+                size={32}
+              />
+              <Text style={styles.infoBoxValue}>{data.address.city}</Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Icon
+                name="medkit-outline"
+                color={colors.primary}
+                type="ion"
+                size={32}
+              />
+              <Text style={styles.infoBoxValue}>
+                {data.sterilized ? 'Kısırlaştırılmış' : 'Kısırlaştırılmamış'}
+              </Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Icon
+                name="needle"
+                color={colors.primary}
+                type="material-community"
+                size={32}
+              />
+              <Text style={styles.infoBoxValue}>
+                {data.vaccinated ? 'Aşıları Tam' : 'Aşısı Yok'}
+              </Text>
+            </View>
+          </View>
+
+          <MapView
+            initialRegion={{
+              latitude: data.address.latitude,
+              longitude: data.address.longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
+            zoomEnabled={false}
+            pitchEnabled={false}
+            rotateEnabled={false}
+            scrollEnabled={false}
+            style={{ width: '100%', height: 120, marginTop: 12 }}
+          >
+            <Marker
+              coordinate={{
+                latitude: data.address.latitude,
+                longitude: data.address.longitude,
+              }}
+            />
+          </MapView>
+
+          <View style={{ marginTop: 8 }}>
+            <Text style={styles.sectionTitle}>İlan Sahibi</Text>
+            <View style={styles.adsOwnerContainer}>
+              <Image
+                source={
+                  !userDetails?.profilePictureURL
+                    ? require('@assets/images/avatar_default.png')
+                    : { uri: userDetails?.profilePictureURL }
+                }
+                style={styles.adsOwnerImage}
+              />
+              <Text style={styles.adsOwnerNameSurname}>
+                {userDetails?.name} {userDetails?.surname}
+              </Text>
+            </View>
+            <View style={{ gap: 8 }}>
+              <Button
+                label="Mesaj Gönder"
+                backgroundColor={colors.success}
+                additionalStyles={{
+                  label: styles.sendWhatsappMessageButtonText,
+                }}
+                icon={
+                  <Icon
+                    name="logo-whatsapp"
+                    color={colors.white}
+                    size={24}
+                    type="ion"
+                  />
+                }
+                onPress={sendWhatsappMessage}
+              />
+              {data.userId === user?.uid && (
+                <Button
+                  backgroundColor={colors.error}
+                  labelColor={colors.white}
+                  label="İlanı Kaldır"
+                  onPress={() => handleDeleteListing(data.id)}
+                  additionalStyles={{
+                    label: styles.sendWhatsappMessageButtonText,
+                  }}
+                  icon={
+                    <Icon
+                      name="close"
+                      color={colors.white}
+                      size={24}
+                      type="ion"
+                    />
+                  }
+                />
+              )}
+            </View>
           </View>
         </View>
 
+        {/*    
         <View style={styles.infoContainer}>
           <View style={styles.infoTopSection}>
             <View style={{ flexShrink: 1 }}>
@@ -220,7 +358,6 @@ const AdoptionDetails = () => {
                   color={colors.black_50}
                   size={18}
                 />
-                {/* Güncel views buradan geliyor */}
                 <Text style={styles.locationText}>{views} Görüntüleme</Text>
               </View>
             </View>
@@ -296,7 +433,7 @@ const AdoptionDetails = () => {
             pitchEnabled={false}
             rotateEnabled={false}
             scrollEnabled={false}
-            style={{ width: '100%', height: 150, marginTop: 12 }}
+            style={{ width: '100%', height: 180, marginTop: 12 }}
           >
             <Marker
               coordinate={{
@@ -318,7 +455,9 @@ const AdoptionDetails = () => {
             />
           )}
         </View>
+        */}
       </ScrollView>
+
       <Modal
         isVisible={visibleFullScreenImage}
         onBackButtonPress={() => setVisibleFullScreenImage(false)}
@@ -348,7 +487,7 @@ const AdoptionDetails = () => {
             onPress={() => setVisibleFullScreenImage(false)}
             style={styles.modalCloseButton}
           >
-            <Icon name="close" type="ion" color={colors.black_50} size={24} />
+            <Icon name="close" type="ion" color={colors.primary} size={24} />
           </TouchableOpacity>
         </View>
       </Modal>

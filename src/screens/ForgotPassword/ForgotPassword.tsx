@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Input, Button, BackButton } from '@components';
+import { Input, Button, CircleButton } from '@components';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -71,7 +71,7 @@ const ForgotPassword = () => {
           { top: insets.top + 16, left: insets.left + 16 },
         ]}
       >
-        <BackButton size={36} />
+        <CircleButton iconSize={36}/>
       </View>
       <View style={styles.forgotPasswodForm}>
         <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>

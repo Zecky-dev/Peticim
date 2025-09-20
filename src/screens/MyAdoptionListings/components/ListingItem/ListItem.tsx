@@ -6,6 +6,7 @@ import { useAuth } from '@context/AuthContext';
 import styles from './ListItem.style';
 import { Icon } from '@components';
 import colors from '@utils/colors';
+import { useNavigation } from '@react-navigation/native';
 
 type ListingItemProps = {
   item: ListingItem;
@@ -13,6 +14,7 @@ type ListingItemProps = {
 };
 
 const ListItem = ({ item, onDeleted }: ListingItemProps) => {
+  const navigation = useNavigation();
   const { showLoading, hideLoading } = useLoading();
   const { user, token } = useAuth();
 
@@ -45,22 +47,23 @@ const ListItem = ({ item, onDeleted }: ListingItemProps) => {
     );
   };
 
+  const navigateToListing = () => {
+    navigation.navigate('AdoptionDetails', { data: item});
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.buttonLeft}>
-        <Image
-          source={{ uri: item.photoURLs[0] }}
-          style={styles.image}
-        />
+      <TouchableOpacity style={styles.buttonLeft} onPress={navigateToListing}>
+        <Image source={{ uri: item.photoURLs[0] }} style={styles.image} />
         <View>
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.animalType}>{item.animalType}</Text>
           <View style={styles.viewsContainer}>
-            <Icon name='eye-outline' color={colors.black_50} size={18}/>
+            <Icon name="eye-outline" color={colors.black_50} size={18} />
             <Text style={styles.viewsText}>{item.views} görüntülenme</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => handleDeleteListing(item.id)}>
         <Text style={styles.removeAdoptionText}>Kaldır</Text>
       </TouchableOpacity>

@@ -76,8 +76,7 @@ export function useListings(
         const listingsWithPhotos = await enrichListingsWithPhotos(
           initialListings,
         );
-        const listingsWithAds = injectAds(listingsWithPhotos);
-        setListings(listingsWithAds);
+        setListings(listingsWithPhotos);
         setHasMore(initialListings.length >= 10);
       } finally {
         hideLoading();
@@ -92,8 +91,7 @@ export function useListings(
     showLoading();
     const nextListings = await getNextListings(filters);
     const listingsWithPhotos = await enrichListingsWithPhotos(nextListings);
-    const listingsWithAds = injectAds(listingsWithPhotos);
-    setListings(prev => [...prev, ...listingsWithAds]);
+    setListings(prev => [...prev, ...listingsWithPhotos]);
     if (nextListings.length === 0 || nextListings.length < 10)
       setHasMore(false);
     hideLoading();
@@ -106,6 +104,6 @@ export function useListings(
     loadMoreListings,
     favoriteListings,
     hasLoadedOnce,
-    isLoading,
+    isLoading
   };
 }

@@ -79,11 +79,17 @@ export default StyleSheet.create({
     fontFamily: 'Comfortaa-Bold',
     fontSize: 13,
   },
-  adsOwnerContainer: { alignItems: 'center', gap: 6, flexDirection: 'row', marginBottom:12 },
+  adsOwnerContainer: {
+    alignItems: 'center',
+    gap: 6,
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
   adsOwnerImage: {
     width: 50,
     height: 50,
-    borderRadius: 8,
+    borderRadius: 25,
+    resizeMode: 'cover',
   },
   adsOwnerNameSurname: {
     color: colors.black,
@@ -105,135 +111,27 @@ export default StyleSheet.create({
     fontFamily: 'Comfortaa-Bold',
     fontSize: 14,
   },
-
-  /*
-  container: {
-    flex: 1,
-    backgroundColor: '#e9e9e9',
+  reportModalContainer: {
+    margin: 0,
   },
-  listingTitle: {
-    fontFamily: 'Comfortaa-Bold',
-    fontSize: 18,
-    color: colors.black,
-  },
-  locationText: {
-    color: colors.black_50,
-    fontFamily: 'Comfortaa-Medium',
-    fontSize: 14,
-  },
-  animalBreed: {
-    fontFamily: 'Comfortaa-SemiBold',
-    fontSize: 16,
-    color: colors.black_50,
-  },
-  infoContainer: {
-    padding: 8,
-    gap: 12,
-  },
-  sendWhatsappMessageButton: {
-    flexDirection: 'row',
-    backgroundColor: colors.success,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 4,
-    gap: 4,
-    alignItems: 'center',
-  },
-  sendWhatsappMessageText: {
-    color: colors.white,
-    fontFamily: 'Comfortaa-Medium',
-    fontSize: 14,
-  },
-
-  infoTopSection: {
-    flexDirection: 'row',
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-
-  descriptionText: {
-    color: colors.black,
-    fontFamily: 'Comfortaa-Medium',
-  },
-  descriptionTitle: {
-    color: colors.black,
-    fontFamily: 'Comfortaa-Bold',
-    fontSize: 18,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.gray,
-  },
-  infoSection: {
-    padding: 8,
-  },
-  backButtonContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  reportModalContentContainer: {
     backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
     position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    gap: 8,
   },
-  infoSectionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  infoSectionRowLabel: {
+  reasonSelectText: {
     fontFamily: 'Comfortaa-Bold',
-    fontSize: 14,
+    fontSize: 15,
   },
-  infoSectionRowValue: {
-    fontFamily: 'Comfortaa-Medium',
-    fontSize: 13,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  showFullScreenImageButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.white,
-    position: "absolute",
-    bottom: 12,
-    right: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalCloseButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  ownerInfoRow: {
+  reasonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flex: 1,
+    flexWrap: 'wrap',
+    gap: 4
   },
-  ownerInfoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  */
 });

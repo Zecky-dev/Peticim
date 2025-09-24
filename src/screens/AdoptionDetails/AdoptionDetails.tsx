@@ -24,22 +24,13 @@ import {
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
-import { CircleButton, Button, Icon } from '@components';
+import { CircleButton, Button, Icon, ChipCard, Input } from '@components';
 import { useUserDetails } from '@hooks/useUserDetails';
 import { useAuth } from '@context/AuthContext';
 import { incrementListingView } from '@api/listing';
 import { deleteListing, toggleFavorite } from '@firebase/listingService';
 import { useLoading } from '@context/LoadingContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-} from 'react-native-google-mobile-ads';
-const adUnitId = __DEV__
-  ? TestIds.ADAPTIVE_BANNER
-  : 'ca-app-pub-1871077443093626~5754015120';
 
 const AdoptionDetails = () => {
   const route =
@@ -50,20 +41,29 @@ const AdoptionDetails = () => {
       NativeStackNavigationProp<AdoptionStackParamList, 'AdoptionDetails'>
     >();
 
-  const { userDetails } = useUserDetails(data.userId);
-  const { user, token } = useAuth();
-  const { showLoading, hideLoading } = useLoading();
-  const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
-  const [views, setViews] = useState<number>(data.views);
+  const { userDetails: currentUserDetails } = useUserDetails(user?.uid || null);
+  const { userDetails: listingOwnerUserDetails } = useUserDetails(data.userId);
+
+  const { showLoading, hideLoading } = useLoading();
+
   const [visibleFullScreenImage, setVisibleFullScreenImage] = useState(false);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [report, setReport] = useState<{
+    selectedReason: string;
+    reasonText?: string;
+  }>({
+    selectedReason: '',
+    reasonText: '',
+  });
 
   useEffect(() => {
-    if (userDetails?.favorites) {
-      setIsFavorited(userDetails.favorites.includes(data.id));
+    if (currentUserDetails?.favorites) {
+      setIsFavorited(currentUserDetails.favorites.includes(data.id));
     }
-  }, [userDetails, data.id]);
+  }, [currentUserDetails, data.id]);
 
   // Görüntülenme sayısını artır
   useEffect(() => {
@@ -71,10 +71,7 @@ const AdoptionDetails = () => {
       try {
         const viewerId = user?.uid;
         if (!viewerId) return;
-        const res = await incrementListingView(data.id, viewerId);
-        if (res?.views !== undefined) {
-          setViews(res.views);
-        }
+        await incrementListingView(data.id, viewerId);
       } catch (err) {
         console.error('View increment error:', err);
       }
@@ -87,7 +84,7 @@ const AdoptionDetails = () => {
   // WhatsApp mesajı gönder
   const sendWhatsappMessage = () => {
     const phoneNumber = data.phone;
-    const message = `Merhaba ${userDetails?.name}, Peticim'den gördüğüm "${data.title}" isimli ilanınız ile ilgileniyorum.`;
+    const message = `Merhaba ${listingOwnerUserDetails?.name}, Peticim'den gördüğüm "${data.title}" isimli ilanınız ile ilgileniyorum.`;
 
     if (!phoneNumber) {
       Alert.alert('Telefon numarası bulunamadı.');
@@ -122,9 +119,11 @@ const AdoptionDetails = () => {
           text: 'Evet',
           style: 'destructive',
           onPress: async () => {
+            console.log('LISTING_ID', listingId);
+            console.log('USER_ID', user?.uid);
             try {
               showLoading();
-              await deleteListing(listingId, user?.uid, token);
+              await deleteListing(listingId, user?.uid);
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
@@ -158,6 +157,16 @@ const AdoptionDetails = () => {
     }
   };
 
+  const onReasonSelect = (reason: { id: number; text: string }) => {
+    setReport(prev => ({ ...prev, selectedReason: reason.text }));
+  };
+  const reportReasonList = [
+    { id: 1, text: 'Uygunsuz İçerik' },
+    { id: 2, text: 'Sahte İlan' },
+    { id: 3, text: 'Ücretli Sahiplendirme' },
+    { id: 4, text: 'Diğer' },
+  ];
+
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <ScrollView>
@@ -171,8 +180,8 @@ const AdoptionDetails = () => {
             activeDotColor={colors.primary}
             style={{ backgroundColor: colors.gray }}
           >
-            {data.photoURLs!.map((photoURL, i) => (
-              <Image key={i} style={styles.image} source={{ uri: photoURL }} />
+            {data.images!.map((image, i) => (
+              <Image key={i} style={styles.image} source={{ uri: image.url }} />
             ))}
           </Swiper>
           <TouchableOpacity
@@ -284,39 +293,45 @@ const AdoptionDetails = () => {
             <View style={styles.adsOwnerContainer}>
               <Image
                 source={
-                  !userDetails?.profilePictureURL
+                  !listingOwnerUserDetails?.profilePicture.url
                     ? require('@assets/images/avatar_default.png')
-                    : { uri: userDetails?.profilePictureURL }
+                    : { uri: listingOwnerUserDetails?.profilePicture.url }
                 }
                 style={styles.adsOwnerImage}
               />
               <Text style={styles.adsOwnerNameSurname}>
-                {userDetails?.name} {userDetails?.surname}
+                {listingOwnerUserDetails?.name}{' '}
+                {listingOwnerUserDetails?.surname}
               </Text>
             </View>
             <View style={{ gap: 8 }}>
-              <Button
-                label="Mesaj Gönder"
-                backgroundColor={colors.success}
-                additionalStyles={{
-                  label: styles.sendWhatsappMessageButtonText,
-                }}
-                icon={
-                  <Icon
-                    name="logo-whatsapp"
-                    color={colors.white}
-                    size={24}
-                    type="ion"
-                  />
-                }
-                onPress={sendWhatsappMessage}
-              />
+              {data.userId !== user?.uid && (
+                <Button
+                  label="Mesaj Gönder"
+                  backgroundColor={colors.success}
+                  additionalStyles={{
+                    label: styles.sendWhatsappMessageButtonText,
+                  }}
+                  icon={
+                    <Icon
+                      name="logo-whatsapp"
+                      color={colors.white}
+                      size={24}
+                      type="ion"
+                    />
+                  }
+                  onPress={sendWhatsappMessage}
+                />
+              )}
+
               {data.userId === user?.uid && (
                 <Button
                   backgroundColor={colors.error}
                   labelColor={colors.white}
                   label="İlanı Kaldır"
-                  onPress={() => handleDeleteListing(data.id)}
+                  onPress={() => {
+                    handleDeleteListing(data.id);
+                  }}
                   additionalStyles={{
                     label: styles.sendWhatsappMessageButtonText,
                   }}
@@ -330,132 +345,31 @@ const AdoptionDetails = () => {
                   }
                 />
               )}
+              {data.userId !== user?.uid && (
+                <Button
+                  backgroundColor={colors.error}
+                  labelColor={colors.white}
+                  label="İlanı Raporla"
+                  onPress={() => {
+                    setReportModalVisible(true);
+                    setReport({ selectedReason: '', reasonText: '' });
+                  }}
+                  additionalStyles={{
+                    label: styles.sendWhatsappMessageButtonText,
+                  }}
+                  icon={
+                    <Icon
+                      name="report-gmailerrorred"
+                      color={colors.white}
+                      size={24}
+                      type="material"
+                    />
+                  }
+                />
+              )}
             </View>
           </View>
         </View>
-
-        {/*    
-        <View style={styles.infoContainer}>
-          <View style={styles.infoTopSection}>
-            <View style={{ flexShrink: 1 }}>
-              <Text style={styles.listingTitle}>{data.title}</Text>
-              <Text style={styles.animalBreed}>{data.animalBreed}</Text>
-            </View>
-            <View style={{ justifyContent: 'center', gap: 4 }}>
-              <View style={styles.infoRow}>
-                <Icon
-                  name="location-outline"
-                  type="ion"
-                  color={colors.black_50}
-                  size={18}
-                />
-                <Text style={styles.locationText}>{data.address.city}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Icon
-                  name="eye-outline"
-                  type="ion"
-                  color={colors.black_50}
-                  size={18}
-                />
-                <Text style={styles.locationText}>{views} Görüntüleme</Text>
-              </View>
-            </View>
-          </View>
-
-          <Text style={styles.descriptionText}>{data.description}</Text>
-
-          <View style={styles.infoSectionRow}>
-            <Icon
-              name="medkit-outline"
-              type="ion"
-              color={colors.error}
-              size={24}
-            />
-            <Text style={styles.infoSectionRowLabel}>Aşılar:</Text>
-            <Text style={styles.infoSectionRowValue}>
-              {data.vaccinated ? 'Yapıldı' : 'Yapılmadı'}
-            </Text>
-          </View>
-
-          <View style={styles.infoSectionRow}>
-            <Icon
-              name="fitness-outline"
-              type="ion"
-              color={colors.success}
-              size={28}
-            />
-            <Text style={styles.infoSectionRowLabel}>Kısırlaştırma:</Text>
-            <Text style={styles.infoSectionRowValue}>
-              {data.sterilized ? 'Yapıldı' : 'Yapılmadı'}
-            </Text>
-          </View>
-
-          <View style={styles.ownerInfoRow}>
-            <View style={styles.ownerInfoLeft}>
-              <Image
-                source={
-                  !userDetails?.profilePictureURL
-                    ? require('@assets/images/avatar_default.png')
-                    : { uri: userDetails?.profilePictureURL }
-                }
-                style={styles.avatar}
-              />
-              <Text style={styles.infoSectionRowLabel}>Sahibi:</Text>
-              <Text style={styles.infoSectionRowValue}>
-                {userDetails?.name} {userDetails?.surname}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={sendWhatsappMessage}
-              style={styles.sendWhatsappMessageButton}
-              activeOpacity={0.8}
-            >
-              <Icon
-                name="logo-whatsapp"
-                color={colors.white}
-                size={20}
-                type="ion"
-              />
-              <Text style={styles.sendWhatsappMessageText}>Mesaj Gönder</Text>
-            </TouchableOpacity>
-          </View>
-
-
-          <MapView
-            initialRegion={{
-              latitude: data.address.latitude,
-              longitude: data.address.longitude,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            }}
-            zoomEnabled={false}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            scrollEnabled={false}
-            style={{ width: '100%', height: 180, marginTop: 12 }}
-          >
-            <Marker
-              coordinate={{
-                latitude: data.address.latitude,
-                longitude: data.address.longitude,
-              }}
-            />
-          </MapView>
-
-          {data.userId === user?.uid && (
-            <Button
-              backgroundColor={colors.error}
-              labelColor={colors.white}
-              label="İlanı Kaldır"
-              onPress={() => handleDeleteListing(data.id)}
-              icon={
-                <Icon name="close" color={colors.white} size={24} type="ion" />
-              }
-            />
-          )}
-        </View>
-        */}
       </ScrollView>
 
       <Modal
@@ -471,7 +385,7 @@ const AdoptionDetails = () => {
             activeDotColor={colors.white}
             style={{ backgroundColor: colors.gray }}
           >
-            {data.photoURLs!.map((photoURL, i) => (
+            {data.images!.map((image, i) => (
               <Image
                 key={i}
                 style={{
@@ -479,7 +393,7 @@ const AdoptionDetails = () => {
                   height: '100%',
                   resizeMode: 'cover',
                 }}
-                source={{ uri: photoURL }}
+                source={{ uri: image.url }}
               />
             ))}
           </Swiper>
@@ -489,6 +403,41 @@ const AdoptionDetails = () => {
           >
             <Icon name="close" type="ion" color={colors.primary} size={24} />
           </TouchableOpacity>
+        </View>
+      </Modal>
+
+      <Modal
+        isVisible={reportModalVisible}
+        style={styles.reportModalContainer}
+        onBackButtonPress={() => setReportModalVisible(false)}
+        onBackdropPress={() => setReportModalVisible(false)}
+      >
+        <View style={styles.reportModalContentContainer}>
+          <Text style={styles.reasonSelectText}>Neden Seçiniz</Text>
+          <View style={styles.reasonsContainer}>
+            {reportReasonList.map(reason => (
+              <ChipCard
+                isSelected={reason.text === report.selectedReason}
+                key={reason.id.toString()}
+                text={reason.text}
+                onSelect={() => onReasonSelect(reason)}
+              />
+            ))}
+          </View>
+
+          <Input
+            placeholder="İletmek istediğiniz mesajınız.."
+            customStyles={{
+              input: {
+                height: 100,
+                textAlignVertical: 'top',
+              },
+            }}
+            showCharacterCount={true}
+            maxLength={120}
+          />
+
+          <Button label="Raporla" onPress={() => console.log('Rapor')} />
         </View>
       </Modal>
     </SafeAreaView>

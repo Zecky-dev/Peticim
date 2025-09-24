@@ -3,6 +3,7 @@ import { useLoading } from '@context/LoadingContext';
 import { showToast } from '@config/toastConfig';
 import Geolocation, { GeoPosition } from 'react-native-geolocation-service';
 import axios from 'axios';
+import * as geofire from 'geofire-common';
 
 const useLocation = () => {
   const { showLoading, hideLoading } = useLoading();
@@ -13,6 +14,7 @@ const useLocation = () => {
     formattedAddress: string;
     city: string;
     district: string;
+    geohash: string;
   } | null> => {
     try {
       if (Platform.OS === 'android') {
@@ -20,7 +22,8 @@ const useLocation = () => {
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: 'Konum İzni',
-            message: 'Adresinizi eklemek için konumunuza erişmemiz gerekiyor.',
+            message:
+              'Konumunuzla işlem yapabilmek için konum izni vermeniz gerekmektedir.',
             buttonNegative: 'Reddet',
             buttonPositive: 'İzin Ver',
           },
@@ -29,7 +32,13 @@ const useLocation = () => {
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
           Alert.alert(
             'İzin Gerekli',
-            'Adresinizi belirleyebilmeniz için konum izni vermeniz gerekir',
+            'Konumunuzla işlem yapabilmek için konum izni vermeniz gerekmektedir.',
+            [
+              {
+                text: 'Tamam',
+                style: 'default',
+              },
+            ],
           );
           return null;
         }
@@ -50,6 +59,7 @@ const useLocation = () => {
       });
 
       const { latitude, longitude } = position.coords;
+      const hash = geofire.geohashForLocation([latitude, longitude]);
 
       const response = await axios.get(
         `https://nominatim.openstreetmap.org/reverse?format=geojson&lat=${latitude}&lon=${longitude}`,
@@ -80,7 +90,14 @@ const useLocation = () => {
         formattedAddress = feature.properties.display_name;
       }
 
-      return { latitude, longitude, formattedAddress, city, district };
+      return {
+        latitude,
+        longitude,
+        formattedAddress,
+        city,
+        district,
+        geohash: hash,
+      };
     } catch (err) {
       console.warn('getLocationInfo error:', err);
       showToast({

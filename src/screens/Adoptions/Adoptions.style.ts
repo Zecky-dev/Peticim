@@ -4,6 +4,7 @@ export default StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: 12,
+    paddingHorizontal: 12,
     gap: 8,
     backgroundColor: '#e3e3e3',
   },
@@ -13,7 +14,6 @@ export default StyleSheet.create({
   topContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
   },
   outlineButtonContainer: {
     flexDirection: 'row',
@@ -58,7 +58,6 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   listingsContentContainer: {
-    paddingHorizontal: 12,
     paddingBottom: 40,
   },
   filterButtonsContainer: {

@@ -1,17 +1,10 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import {
-  onAuthStateChanged,
-  signOut,
-  getIdToken,
-  onIdTokenChanged,
-} from '@react-native-firebase/auth';
+import { onAuthStateChanged, signOut } from '@react-native-firebase/auth';
 import { sendPasswordResetEmail } from '@api/auth';
 import { useLoading } from './LoadingContext';
 import { auth } from '@firebase/firebase';
 import { signInUser, signUpUser } from '@firebase/authService';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -19,7 +12,6 @@ interface AuthProviderProps {
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
-  token: string | null;
   initializing: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, otherData: any) => Promise<void>;
@@ -27,31 +19,22 @@ interface AuthContextType {
   passwordReset: (email: string) => Promise<void>;
 }
 
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
   const { showLoading, hideLoading } = useLoading();
 
   async function onAuthStateChangedCallback(
     user: FirebaseAuthTypes.User | null,
   ) {
-    if (user) {
-      if (!user.emailVerified) {
-        setUser(null);
-        setToken(null);
-      } else {
-        setUser(user);
-        const idToken = await getIdToken(user);
-        setToken(idToken || null);
-      }
+    if (user && user.emailVerified) {
+      setUser(user);
     } else {
       setUser(null);
-      setToken(null);
     }
-    if (initializing) {
-      setInitializing(false);
-    }
+    if (initializing) setInitializing(false);
   }
 
   useEffect(() => {
@@ -59,24 +42,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     return subscriber;
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, async user => {
-      if (user) {
-        const idToken = await getIdToken(user, true);
-        setToken(idToken);
-      } else {
-        setToken(null);
-      }
-    });
-    return unsubscribe;
-  }, []);
-
   const login = async (email: string, password: string) => {
     try {
       showLoading();
       await signInUser(email.toLowerCase(), password);
-    } catch (error: any) {
-      throw error;
     } finally {
       hideLoading();
     }
@@ -87,8 +56,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       showLoading();
       await signUpUser(email, password, otherData);
       await logout();
-    } catch (error: any) {
-      throw error;
     } finally {
       hideLoading();
     }
@@ -98,8 +65,6 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       showLoading();
       await signOut(auth);
-    } catch (error: any) {
-      console.error('LOGOUT_ERROR', error);
     } finally {
       hideLoading();
     }
@@ -109,22 +74,18 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       showLoading();
       await sendPasswordResetEmail(email);
-    } catch (error: any) {
-      console.error('PASSWORD_RESET_ERROR', error);
-      throw error;
     } finally {
       hideLoading();
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     initializing,
     login,
     register,
     logout,
     passwordReset,
-    token,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -132,9 +93,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within a AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
 

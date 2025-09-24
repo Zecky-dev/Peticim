@@ -16,24 +16,21 @@ type ListingItemProps = {
 const ListItem = ({ item, onDeleted }: ListingItemProps) => {
   const navigation = useNavigation();
   const { showLoading, hideLoading } = useLoading();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   const handleDeleteListing = (listingId: string) => {
     Alert.alert(
       'İlanı Sil',
       'Bu ilanı silmek istediğine emin misin?',
       [
-        {
-          text: 'Hayır',
-          style: 'cancel',
-        },
+        { text: 'Hayır', style: 'cancel' },
         {
           text: 'Evet',
           style: 'destructive',
           onPress: async () => {
             try {
               showLoading();
-              await deleteListing(listingId, user?.uid, token);
+              await deleteListing(listingId, user?.uid);
               onDeleted(listingId);
             } catch (error) {
               console.error('HANDLE_DELETE_LISTING_ERROR', error);
@@ -48,22 +45,35 @@ const ListItem = ({ item, onDeleted }: ListingItemProps) => {
   };
 
   const navigateToListing = () => {
-    navigation.navigate('AdoptionDetails', { data: item});
+    navigation.navigate('AdoptionDetails', { data: item });
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.buttonLeft} onPress={navigateToListing}>
-        <Image source={{ uri: item.photoURLs[0] }} style={styles.image} />
-        <View>
+        <Image source={{ uri: item.images[0]?.url }} style={styles.image} />
+        <View style={{ flex: 1 }}>
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.animalType}>{item.animalType}</Text>
-          <View style={styles.viewsContainer}>
-            <Icon name="eye-outline" color={colors.black_50} size={18} />
-            <Text style={styles.viewsText}>{item.views} görüntülenme</Text>
-          </View>
+
+          {/* Onay durumu badge */}
+          <Text
+            style={[
+              styles.approvalText,
+              { color: item.isApproved ? colors.success : colors.error },
+            ]}
+          >
+            {item.isApproved ? 'Onaylandı' : 'Onay Bekliyor'}
+          </Text>
+          {item.isApproved && (
+            <View style={styles.viewsContainer}>
+              <Icon name="eye-outline" color={colors.black_50} size={18} />
+              <Text style={styles.viewsText}>{item.views} görüntülenme</Text>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
+
       <TouchableOpacity onPress={() => handleDeleteListing(item.id)}>
         <Text style={styles.removeAdoptionText}>Kaldır</Text>
       </TouchableOpacity>

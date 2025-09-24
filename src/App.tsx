@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  View,
+  PermissionsAndroid,
+} from 'react-native';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@config/toastConfig';
 import {
@@ -23,6 +29,7 @@ import {
   AdoptionDetails,
   MyAdoptionListings,
   AdoptionOwnerProfile,
+  NearAdoptions,
 } from '@screens';
 import { HeaderLogo, Icon } from '@components';
 
@@ -64,6 +71,7 @@ const AdoptionStacks = () => (
       name="AdoptionOwnerProfile"
       component={AdoptionOwnerProfile}
     />
+    <Stack.Screen name="NearAdoptions" component={NearAdoptions} />
   </Stack.Navigator>
 );
 
@@ -103,12 +111,37 @@ function AppStack() {
               getFocusedRouteNameFromRoute(route) ?? 'Adoptions';
             if (
               routeName === 'AdoptionDetails' ||
-              routeName === 'AdoptionOwnerProfile'
+              routeName === 'AdoptionOwnerProfile' ||
+              routeName === 'NearAdoptions'
             ) {
               return { display: 'none' };
             }
             return { backgroundColor: colors.primary };
           })(route),
+          headerRight: () => {
+            const routeName =
+              getFocusedRouteNameFromRoute(route) ?? 'Adoptions';
+            if (routeName === 'Adoptions') {
+              return (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('AdoptionStacks', {
+                      screen: 'NearAdoptions',
+                    })
+                  }
+                  style={{ marginRight: 12 }}
+                >
+                  <Icon
+                    name="map-outline"
+                    type="ion"
+                    color={colors.primary}
+                    size={24}
+                  />
+                </TouchableOpacity>
+              );
+            }
+            return null;
+          },
         })}
       />
       <Tab.Screen
@@ -129,7 +162,7 @@ function AppStack() {
         }}
       />
       <Tab.Screen
-        name="ProfileTab"
+        name="ProfileStack"
         component={ProfileStack}
         options={({ route }) => ({
           title: 'Profil',
@@ -160,6 +193,27 @@ function AppStack() {
 
 const RootNavigator = () => {
   const { user, initializing } = useAuth();
+
+  React.useEffect(() => {
+    const requestNotificationPermission = async () => {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('Bildirim izni verildi');
+        } else {
+          console.log('Bildirim izni reddedildi');
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    };
+    if (user) {
+      requestNotificationPermission();
+    }
+  }, [user]);
+
   if (initializing) {
     return (
       <View style={styles.loadingContainer}>

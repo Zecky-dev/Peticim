@@ -11,14 +11,15 @@ import colors from '@utils/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MyAdoptionListings = () => {
-  const { user, token } = useAuth();
-  const { listings, loadInitialListings, setListings, hasLoadedOnce } =useListings();
+  const { user } = useAuth();
+  const { listings, loadInitialListings, setListings, hasLoadedOnce } =
+    useListings();
   const userListings = listings.filter((item: any) => !item.isAd);
   useEffect(() => {
-    if (token) {
-      loadInitialListings([{ field: 'userId', operator: '==', value: user?.uid }]);
-    }
-  }, [token]);
+    loadInitialListings([
+      { field: 'userId', operator: '==', value: user?.uid },
+    ], false);
+  }, []);
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>

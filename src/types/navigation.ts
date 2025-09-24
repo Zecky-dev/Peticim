@@ -8,6 +8,7 @@ declare global {
   type ProfileStackParamList = {
     Profile: undefined;
     AccountDetails: undefined;
+    MyAdoptionListings: undefined;
   };
 
   type AdoptionStackParamList = {
@@ -19,7 +20,7 @@ declare global {
   type RootTabParamList = {
     AdoptionStacks: AdoptionStackParamList;
     AddAdoption: { shouldRefresh?: boolean };
-    ProfileTab: ProfileStackParamList;
+    ProfileStack: ProfileStackParamList;
   };
 
   type RootStackParamList = {

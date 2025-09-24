@@ -24,13 +24,7 @@ const ListingItem = ({ data, favorited }: ListingItemProps) => {
     >();
   const { user } = useAuth();
 
-  const [isFavorited, setIsFavorited] = useState(favorited);
-  const handleToggleFavorite = async () => {
-    const toggleSuccess = await toggleFavorite(data.id, user?.uid);
-    if (toggleSuccess) {
-      setIsFavorited(!isFavorited);
-    }
-  };
+
 
   // Formats date
   const formattedDate = () => {
@@ -44,14 +38,14 @@ const ListingItem = ({ data, favorited }: ListingItemProps) => {
     navigation.navigate('AdoptionDetails', { data });
   };
 
-  if (data && data.photoURLs) {
+  if (data) {
     return (
       <TouchableOpacity
         onPress={navigateToAdoptionDetails}
         style={styles.container}
         activeOpacity={0.8}
       >
-        <Image source={{ uri: data.photoURLs[0] }} style={styles.image} />
+        <Image source={{ uri: data.images[0].url }} style={styles.image} />
 
         <View style={styles.rightContainer}>
           <View style={styles.rightContainerTop}>

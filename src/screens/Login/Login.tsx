@@ -137,6 +137,7 @@ const Login = () => {
                         ? errors.email
                         : ''
                     }
+                    autoCapitalize='none'
                   />
                   <Input
                     label="Şifre"
@@ -152,6 +153,7 @@ const Login = () => {
                         ? errors.password
                         : ''
                     }
+                    autoCapitalize='none'
                   />
                   <View style={{ marginTop: 8 }}>
                     <Checkbox

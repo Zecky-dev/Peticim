@@ -1,6 +1,5 @@
 import axiosClient from './client';
 
-// ------------------ Şehirleri Getir ------------------
 export const getCities = async () => {
   try {
     const res = await axiosClient.get('/location/cities');
@@ -10,7 +9,6 @@ export const getCities = async () => {
   }
 };
 
-// ------------------ İlçeleri Getir ------------------
 export const getDistricts = async (provinceId: number) => {
   try {
     const res = await axiosClient.get('/location/districts', {
@@ -22,7 +20,6 @@ export const getDistricts = async (provinceId: number) => {
   }
 };
 
-// ------------------ Mahalleleri Getir ------------------
 export const getNeighborhoods = async (districtId: number) => {
   try {
     const res = await axiosClient.get('/location/neighborhoods', {

@@ -10,10 +10,10 @@ interface ListingItem {
   createdAt: Date;
   description: string;
   images: {
+    url: string;
     publicId: string;
     uploadedAt: Date;
   }[];
-  photoURLs?: string[];
   phone: string;
   sterilized?: boolean;
   vaccinated?: boolean;
@@ -28,6 +28,7 @@ interface ListingItem {
     longitude: number;
   };
   views: number;
+  isApproved: boolean;
 }
 
 interface User {
@@ -44,11 +45,22 @@ interface User {
   profilePicture: {
     publicId: string;
     uploadedAt: Date;
+    url: string;
   };
-  profilePictureURL: string;
   surname: string;
   favorites: string[];
+  isBanned: boolean;
+  role: 'user' | 'admin'
 }
+
+type LocationState = {
+  cities: PickerItem[];
+  districts: PickerItem[];
+  neighborhoods: PickerItem[];
+  selectedCity: PickerItem | null;
+  selectedDistrict: PickerItem | null;
+  selectedNeighborhood: PickerItem | null;
+};
 
 interface Filter {
   field: string;

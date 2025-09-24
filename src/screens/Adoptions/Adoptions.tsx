@@ -1,12 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {
   View,
   FlatList,
   TouchableOpacity,
   Text,
-  ActivityIndicator,
   Pressable,
 } from 'react-native';
+
 import {
   Button,
   EmptyList,
@@ -15,42 +21,38 @@ import {
   ListingItem,
   Picker,
 } from '@components';
-import { resetPagination } from '@firebase/listingService';
-import LottieView from 'lottie-react-native';
-import styles from './Adoptions.style';
-
-import { useUserDetails } from '@hooks/useUserDetails';
-import { useAuth } from '@context/AuthContext';
-import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native';
-
-import colors from '@utils/colors';
-import animalFilters from '../../constants/animalFilters.json';
 
 import { AD_BANNER_UNIT_ID } from '@env';
-
 import {
   BannerAd,
   BannerAdSize,
   TestIds,
 } from 'react-native-google-mobile-ads';
+
 import { useListings } from '@hooks/useListings';
+import { useUserDetails } from '@hooks/useUserDetails';
+import { useAuth } from '@context/AuthContext';
 
 import Modal from 'react-native-modal';
+import LottieView from 'lottie-react-native';
+
+import { resetPagination } from '@firebase/listingService';
 import { getCities, getDistricts } from '@api/location';
+
+import colors from '@utils/colors';
+import styles from './Adoptions.style';
+import animalFilters from '../../constants/animalFilters.json';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { isEqual } from '@utils/basicValidations';
 
 const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : AD_BANNER_UNIT_ID;
 
-type LocationState = {
-  cities: PickerItem[];
-  districts: PickerItem[];
-  neighborhoods: PickerItem[];
-  selectedCity: PickerItem | null;
-  selectedDistrict: PickerItem | null;
-  selectedNeighborhood: PickerItem | null;
-};
-
 const Adoptions = () => {
   const route = useRoute<RouteProp<AdoptionStackParamList, 'Adoptions'>>();
+  const navigation =
+    useNavigation<
+      NativeStackNavigationProp<AdoptionStackParamList, 'Adoptions'>
+    >();
   const { user } = useAuth();
   const { userDetails } = useUserDetails(user?.uid || null);
 
@@ -60,9 +62,10 @@ const Adoptions = () => {
   const [showFavorites, setShowFavorites] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [informationBoxVisible, setInformationBoxVisible] = useState(true);
 
-  // Location filter
+  const flatListRef = useRef<FlatList>(null);
+  const scrollOffset = useRef(0);
+
   const [location, setLocation] = useState<LocationState>({
     cities: [],
     districts: [],
@@ -74,7 +77,6 @@ const Adoptions = () => {
 
   const handleCitySelect = async (city: PickerItem) => {
     const districtsRes = await getDistricts(Number(city.value));
-
     setTempFilters(prev => {
       const withoutCityAndDistrict = prev.filter(
         f => f.field !== 'address.city' && f.field !== 'address.district',
@@ -95,7 +97,6 @@ const Adoptions = () => {
       })),
     }));
   };
-
   const handleDistrictSelect = async (district: PickerItem) => {
     setTempFilters(prev => {
       const withoutDistrict = prev.filter(f => f.field !== 'address.district');
@@ -124,8 +125,6 @@ const Adoptions = () => {
   const { listings, loadInitialListings, loadMoreListings, favoriteListings } =
     useListings(filters, showFavorites);
 
-  const { token } = useAuth();
-
   const renderItem = ({ item }: { item: any }) => {
     if (item.isAd) {
       return (
@@ -144,18 +143,26 @@ const Adoptions = () => {
   };
 
   useEffect(() => {
-    if (!token) return;
     loadInitialListings();
-  }, [token]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       if (route.params?.shouldRefresh) {
-        loadInitialListings();
+        loadInitialListings().then(() => {
+          flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+        });
+        navigation.setParams({ shouldRefresh: false });
+      } else {
+        flatListRef.current?.scrollToOffset({
+          offset: scrollOffset.current,
+          animated: false,
+        });
       }
     }, [route.params?.shouldRefresh]),
   );
 
+  // Filter functions
   const toggleAnimalFilter = (newFilter: Filter) => {
     setTempFilters(prev => {
       const isSelected = prev.some(
@@ -185,20 +192,21 @@ const Adoptions = () => {
   };
 
   const applyFilters = () => {
-    if (tempFilters.length > 0) {
-      setShowFavorites(false);
+    const isDifferent =
+      tempFilters.length !== filters.length ||
+      tempFilters.some((f, i) => !isEqual(f, filters[i]));
+
+    if (isDifferent) {
       setFilters(tempFilters);
-      setFilterModalVisible(false);
       loadInitialListings(tempFilters);
-    } else {
-      setFilterModalVisible(false);
     }
+    setShowFavorites(false);
+    setFilterModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
-      {/* <BannerAd size={BannerAdSize.FULL_BANNER} unitId={adUnitId} /> */}
-      <View style={{ paddingHorizontal: 12 }}>
+      <View style={{ marginTop: 12 }}>
         <InformationBox />
       </View>
       <View style={styles.topContainer}>
@@ -243,6 +251,11 @@ const Adoptions = () => {
       </View>
 
       <FlatList
+        ref={flatListRef}
+        onScroll={e => {
+          scrollOffset.current = e.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={16}
         contentContainerStyle={
           listings.length === 0
             ? styles.emptyListingContainer
@@ -252,7 +265,7 @@ const Adoptions = () => {
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         onEndReachedThreshold={0.5}
         onEndReached={() => loadMoreListings()}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -286,7 +299,6 @@ const Adoptions = () => {
         onBackdropPress={() => setFilterModalVisible(false)}
       >
         <View style={styles.filterModalContentContainer}>
-          {/* Hayvan türü seçimi */}
           {filters.length > 0 && (
             <Pressable onPress={resetTempFiltersAndCloseModal}>
               <Text style={styles.resetFiltersText}>Filtreleri Sıfırla</Text>

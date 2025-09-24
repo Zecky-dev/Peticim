@@ -23,7 +23,7 @@ import styles from './Profile.style';
 import colors from '@utils/colors';
 
 const Profile = () => {
-  const { user, token, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { images, setImages, pickFromCamera, pickFromLibrary } =
     useImagePicker();
   const { showLoading, hideLoading } = useLoading();
@@ -70,9 +70,9 @@ const Profile = () => {
           'profile_images',
           user.uid,
           null,
-          token,
         );
-        setAvatarUri(uploadResult.uploadedImages[0].secureUrl);
+        console.log('uploadResult', uploadResult)
+        setAvatarUri(uploadResult.uploadedImages[0].url);
         showToast({
           type: 'success',
           text1: 'Başarılı',

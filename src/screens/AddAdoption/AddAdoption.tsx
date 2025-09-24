@@ -34,6 +34,7 @@ import useLocation from '@hooks/useLocation';
 import { getCities, getNeighborhoods, getDistricts } from '@api/location';
 import { showToast } from '@config/toastConfig';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import * as geofire from 'geofire-common';
 
 const { width } = Dimensions.get('window');
 
@@ -42,7 +43,7 @@ const AddAdoption = () => {
   const navigation =
     useNavigation<BottomTabNavigationProp<RootTabParamList, 'AddAdoption'>>();
   const { images, setImages, pickFromLibrary } = useImagePicker();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { showLoading, hideLoading } = useLoading();
   const { getLocationInfo } = useLocation();
 
@@ -201,18 +202,24 @@ const AddAdoption = () => {
       phone: formik.values.phone,
       address: formik.values.address,
       views: 0,
+      geohash: formik.values.address.geohash,
+      isApproved: false,
     };
     const createListingSuccess = await createListing(
       listingData,
       formik.values.photos,
       user.uid,
-      token,
     );
     if (createListingSuccess) {
-      navigation.navigate('AdoptionStacks', {
-        screen: 'Adoptions',
-        params: { shouldRefresh: true },
-      });
+      showToast({
+        type: 'success',
+        text1: 'İlanınız oluşturuldu',
+        text2: 'İlanınız onay sürecindedir, onaylandıktan sonra yayına alınacaktır.',
+        duration: 'long'
+      })
+
+      navigation.navigate('ProfileStack', { screen: 'MyAdoptionListings' })
+
     }
     hideLoading();
     formik.setSubmitting(false);
@@ -230,7 +237,7 @@ const AddAdoption = () => {
       if (!pickedImages || pickedImages.length === 0) return;
 
       // Tüm fotoğrafları sınıflandır
-      const results = await classifyAnimal(pickedImages, token);
+      const results = await classifyAnimal(pickedImages);
       if (results) {
         const validImages = pickedImages.filter(
           (_, index) => results[index].isAnimal,
@@ -315,9 +322,7 @@ const AddAdoption = () => {
             'User-Agent': 'PeticimApp/1.0 (info@peticimapp.com)',
           },
         });
-
         const data = await response.json();
-
         if (!data[0]) {
           showToast({
             type: 'error',
@@ -328,12 +333,14 @@ const AddAdoption = () => {
           setLocationModalVisible(false);
           return;
         }
+        const hash = geofire.geohashForLocation([+data[0].lat, +data[0].lon])
         const addressInfo = {
           city: selectedCity.label,
           district: selectedDistrict.label,
           formattedAddress: `${selectedNeighborhood.label} Mahallesi, ${selectedDistrict.label}, ${selectedCity.label}, Türkiye`,
           latitude: parseFloat(data[0].lat),
           longitude: parseFloat(data[0].lon),
+          geohash: hash,
         };
         formik.setFieldValue('address', addressInfo);
         setSelectedCity(null);
@@ -446,7 +453,7 @@ const AddAdoption = () => {
                     formik.setFieldValue('description', text)
                   }
                   onBlur={() => formik.setFieldTouched('description')}
-                  maxLength={240}
+                  maxLength={300}
                   customStyles={{
                     input: { minHeight: 80, textAlignVertical: 'top' },
                   }}

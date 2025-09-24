@@ -7,14 +7,13 @@ import {
   resetPagination,
   getListingsByIds,
 } from '@firebase/listingService';
-import { getImages } from '@api/image';
 import { useUserDetails } from './useUserDetails';
 
 export function useListings(
   filters: Filter[] = [],
   showFavorites: boolean = false,
 ) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { showLoading, hideLoading, isLoading } = useLoading();
   const { userDetails } = useUserDetails(user?.uid || null);
 
@@ -29,73 +28,37 @@ export function useListings(
         const favoriteListingsRes = await getListingsByIds(
           userDetails?.favorites,
         );
-        const favoriteListingsWithPhotos = await enrichListingsWithPhotos(
-          favoriteListingsRes,
-        );
-        setFavoriteListings(favoriteListingsWithPhotos);
+        setFavoriteListings(favoriteListingsRes);
       }
     };
     getFavoriteListings();
   }, [userDetails?.favorites]);
 
-  const enrichListingsWithPhotos = async (items: ListingItem[]) => {
-    if (!items.length || !token) return items;
-    const newItems = [];
-    for (let item of items) {
-      const publicIds = item.images.map(image => image.publicId);
-      const itemPhotosRes = await getImages(publicIds, token);
-      const photos = Object.values(itemPhotosRes.urls) as string[];
-      item.photoURLs = photos;
-      newItems.push(item);
-    }
-    return newItems;
-  };
-
-  const injectAds = (data: any[]) => {
-    const AD_FREQUENCY = 2;
-    const newData: any[] = [];
-    data.forEach((item, index) => {
-      newData.push(item);
-      if ((index + 1) % AD_FREQUENCY === 0) {
-        newData.push({
-          id: `ad-${index}-${Math.random()}`,
-          isAd: true,
-        });
-      }
-    });
-    return newData;
-  };
-
   const loadInitialListings = useCallback(
-    async (filters: Filter[] = []) => {
-      if (!token) return;
+    async (filters: Filter[] = [], onlyApproved: boolean = true) => {
       showLoading();
       resetPagination();
       try {
-        const initialListings = await getFirstListings(filters);
-        const listingsWithPhotos = await enrichListingsWithPhotos(
-          initialListings,
-        );
-        setListings(listingsWithPhotos);
+        const initialListings = await getFirstListings(filters, onlyApproved);
+        setListings(initialListings);
         setHasMore(initialListings.length >= 10);
       } finally {
         hideLoading();
         setHasLoadedOnce(true);
       }
     },
-    [token, filters],
+    [filters],
   );
 
   const loadMoreListings = useCallback(async () => {
-    if (!token || isLoading || !hasMore) return;
+    if (isLoading || !hasMore) return;
     showLoading();
     const nextListings = await getNextListings(filters);
-    const listingsWithPhotos = await enrichListingsWithPhotos(nextListings);
-    setListings(prev => [...prev, ...listingsWithPhotos]);
+    setListings(prev => [...prev, ...nextListings]);
     if (nextListings.length === 0 || nextListings.length < 10)
       setHasMore(false);
     hideLoading();
-  }, [token, isLoading, hasMore, filters]);
+  }, [isLoading, hasMore, filters]);
 
   return {
     listings: showFavorites ? favoriteListings : listings,
@@ -104,6 +67,6 @@ export function useListings(
     loadMoreListings,
     favoriteListings,
     hasLoadedOnce,
-    isLoading
+    isLoading,
   };
 }

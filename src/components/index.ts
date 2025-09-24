@@ -10,3 +10,4 @@ export {default as ListingItem} from './ListingItem';
 export {default as EmptyList} from './EmptyList';
 export {default as HeaderLogo} from './HeaderLogo';
 export {default as InformationBox} from './InformationBox';
+export {default as ChipCard} from './ChipCard';

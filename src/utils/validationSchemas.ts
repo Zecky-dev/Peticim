@@ -86,9 +86,10 @@ export const adoptionValidationSchema = yup.object().shape({
     .number()
     .typeError('Yaş sadece sayı olmalıdır.')
     .moreThan(0, 'Yaş 0’dan büyük olmalıdır.')
+    .max(20, 'Yaş 30\'dan büyük olamaz.')
     .test(
       'is-half-or-int',
-      'Yaş sadece tam sayı veya .5 değerinde olabilir.',
+      'Yaş sadece tam sayı veya yarım değerlikler olabilir.',
       value => {
         if (value == null) return true;
         const decimal = value % 1;

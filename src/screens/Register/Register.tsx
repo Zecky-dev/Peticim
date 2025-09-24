@@ -19,7 +19,6 @@ import { registerValidationSchema } from '@utils/validationSchemas';
 import { generateFirebaseErrorMessage } from '@firebase/helpers/generateFirebaseErrorMessage';
 import { useAuth } from '@context/AuthContext';
 
-import colors from '@utils/colors';
 import styles from './Register.style';
 
 
@@ -104,6 +103,8 @@ const Register = () => {
                 name: values.name,
                 surname: values.surname,
                 email: values.email,
+                role: 'user',
+                isBanned: false,
                 profilePicture: '',
                 address: '',
                 phone: '',
@@ -156,6 +157,7 @@ const Register = () => {
                     placeholder="ornek@mail.com"
                     keyboardType="email-address"
                     value={values.email}
+                    autoCapitalize='none'
                   />
                   {errors.email && isSubmitted && (
                     <Alert withIcon={false} message={errors.email} />
@@ -171,6 +173,7 @@ const Register = () => {
                     maxLength={12}
                     keyboardType="default"
                     secureContent={true}
+                    autoCapitalize='none'
                   />
                   {errors.password && isSubmitted && (
                     <Alert withIcon={false} message={errors.password} />

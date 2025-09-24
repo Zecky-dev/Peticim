@@ -1,14 +1,19 @@
 import axiosClient from './client';
+import { getValidToken } from '@utils/functions';
 
 const uploadImages = async (
   images: any[],
   folder: string,
   userId?: string,
   listingId?: string | null,
-  token?: string | null,
 ) => {
   try {
+    const token = await getValidToken();
+    if (!token) return;
     const formData = new FormData();
+    formData.append('folder', folder);
+    if (userId) formData.append('userId', userId);
+    if (listingId) formData.append('listingId', listingId);
     images.forEach((image, index) => {
       formData.append('files', {
         uri: image.uri,
@@ -16,9 +21,6 @@ const uploadImages = async (
         name: image.fileName || `photo_${index}.jpg`,
       } as any);
     });
-    formData.append('folder', folder);
-    if (userId) formData.append('userId', userId);
-    if (listingId) formData.append('listingId', listingId);
     const res = await axiosClient.post('/image/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -31,8 +33,9 @@ const uploadImages = async (
   }
 };
 
-const classifyAnimal = async (images: any[], token?: string | null) => {
-  if (!token || images.length === 0) return null;
+const classifyAnimal = async (images: any[]) => {
+  const token = await getValidToken();
+  if (!token || !images) return;
   try {
     const formData = new FormData();
     images.forEach((image, index) => {
@@ -55,7 +58,10 @@ const classifyAnimal = async (images: any[], token?: string | null) => {
   }
 };
 
-const getImages = async (publicIds: string[], token?: string | null) => {
+// publicId mantığı kaldırılacak, resim url'leri doğrudan ilanlarda tutulacak.
+const getImages = async (publicIds: string[]) => {
+  const token = await getValidToken();
+  if (!token || !publicIds) return;
   try {
     const res = await axiosClient.post(
       '/image',
@@ -72,11 +78,9 @@ const getImages = async (publicIds: string[], token?: string | null) => {
   }
 };
 
-const deleteImages = async (
-  userId: string,
-  listingId: string,
-  token: string,
-) => {
+const deleteImages = async (userId: string, listingId: string) => {
+  const token = await getValidToken();
+  if (!userId || !listingId) return;
   try {
     const res = await axiosClient.post(
       '/image/delete',

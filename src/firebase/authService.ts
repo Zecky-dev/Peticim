@@ -36,8 +36,6 @@ const sendVerification = async (email: string) => {
   await sendVerificationEmail(email);
 };
 
-// EXPORTED FUNCTIONS
-
 export const signUpUser = async (
   email: string,
   password: string,

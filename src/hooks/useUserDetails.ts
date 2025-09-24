@@ -8,7 +8,7 @@ import { useAuth } from '@context/AuthContext';
 export function useUserDetails(userId: string | null) {
   const { showLoading, hideLoading } = useLoading();
   const [userDetails, setUserDetails] = useState<User | null>(null);
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!userId) {
@@ -26,11 +26,10 @@ export function useUserDetails(userId: string | null) {
           if (userData && user) {
             const profilePictureRes = await getImages(
               [userData.profilePicture.publicId],
-              token,
             );
             const profilePictureURL = Object.entries(
               profilePictureRes.urls,
-            ).find(([key, value]) => key.startsWith('profile_images/'))?.[1];
+            ).find(([key]) => key.startsWith('profile_images/'))?.[1];
             setUserDetails({
               ...snap.data(),
               profilePictureURL,

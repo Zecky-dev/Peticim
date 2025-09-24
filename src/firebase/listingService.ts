@@ -17,14 +17,21 @@ import {
   arrayUnion,
   where,
   documentId,
+  startAt,
+  endAt,
 } from '@react-native-firebase/firestore';
 import { uploadImages, deleteImages } from '@api/image';
 import { showToast } from '@config/toastConfig';
+import * as geofire from 'geofire-common';
 
 const listingsCollection = collection(db, 'Listings');
 let lastVisible: FirebaseFirestoreTypes.QueryDocumentSnapshot | null = null;
 
-const applyFilters = (q: any, filters?: Filter[]) => {
+const applyFilters = (q: any, filters?: Filter[], onlyApproved: boolean = true) => {
+  if (onlyApproved) {
+    q = query(q, where('isApproved', '==', true));
+  }
+
   if (!filters) return q;
   filters.forEach(filter => {
     q = query(q, where(filter.field, filter.operator, filter.value));
@@ -36,9 +43,8 @@ export const createListing = async (
   listingData: any,
   images: any[],
   userId: string,
-  token?: string | null,
 ) => {
-  if (!listingData || images.length === 0 || !userId || !token) return;
+  if (!listingData || images.length === 0 || !userId) return;
   try {
     const listingsCollection = collection(db, 'Listings');
     const docRef = doc(listingsCollection);
@@ -53,7 +59,6 @@ export const createListing = async (
       `Listings/${userId}/${listingId}`,
       userId,
       listingId,
-      token,
     );
     return true;
   } catch (error: any) {
@@ -62,14 +67,10 @@ export const createListing = async (
   }
 };
 
-export const getFirstListings = async (filters: Filter[] = []) => {
+export const getFirstListings = async (filters: Filter[] = [],onlyApproved: boolean = true) => {
   try {
-    let q = query(
-      listingsCollection,
-      orderBy('createdAt', 'desc'),
-      limit(10),
-    );
-    q = applyFilters(q, filters)
+    let q = query(listingsCollection, orderBy('createdAt', 'desc'), limit(10));
+    q = applyFilters(q, filters, onlyApproved);
     const documentSnapshots = await getDocs(q);
     if (documentSnapshots.empty) {
       lastVisible = null;
@@ -89,45 +90,31 @@ export const getFirstListings = async (filters: Filter[] = []) => {
   }
 };
 
-export const getNextListings = async (filters: Filter[] = []) => {
+export const getNextListings = async (filters: Filter[] = [], onlyApproved: boolean = true) => {
   if (!lastVisible) return [];
   try {
-    let q = query(
-      listingsCollection,
-      orderBy('createdAt', 'desc'),
-      startAfter(lastVisible),
-      limit(10),
-    );
-    q = applyFilters(q, filters);
+    let q = query(listingsCollection, orderBy('createdAt', 'desc'), startAfter(lastVisible), limit(10));
+    q = applyFilters(q, filters, onlyApproved);
+
     const documentSnapshots = await getDocs(q);
     if (documentSnapshots.empty) {
       lastVisible = null;
       return [];
     }
     lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    const listings = documentSnapshots.docs.map(
-      (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
-        id: doc.id,
-        ...doc.data(),
-      }),
-    );
-    return listings;
+    return documentSnapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     console.error('GET_NEXT_LISTING_ERROR', error);
     return [];
   }
 };
 
-export const deleteListing = async (
-  listingId: string,
-  userId?: string,
-  token?: string | null,
-) => {
-  if (!listingId || !userId || !token) return;
+export const deleteListing = async (listingId: string, userId?: string) => {
+  if (!listingId || !userId) return;
   try {
     const docRef = doc(db, 'Listings', listingId);
+    await deleteImages(userId, listingId);
     await deleteDoc(docRef);
-    await deleteImages(userId, listingId, token);
   } catch (error: any) {
     console.error('DELETE_LISTING_ERROR', error);
   }
@@ -194,6 +181,56 @@ export const getListingsByIds = async (listingIds: string[]) => {
     return listings;
   } catch (error) {
     console.error('GET_LISTINGS_BY_IDS_ERROR', error);
+    return [];
+  }
+};
+
+// Yakındaki ilanları almak için..
+export const getNearbyListings = async (
+  center: { latitude: number; longitude: number },
+  radius: number,
+) => {
+  try {
+    const radiusInM = radius * 1000;
+    const bounds = geofire.geohashQueryBounds(
+      [center.latitude, center.longitude],
+      radiusInM,
+    );
+    const promises = [];
+    for (const b of bounds) {
+      const q = query(
+        listingsCollection,
+        orderBy('geohash'),
+        startAt(b[0]),
+        endAt(b[1]),
+      );
+      promises.push(getDocs(q));
+    }
+
+    const snapshots = await Promise.all(promises);
+    const matchingDocs = [];
+
+    for (const snap of snapshots) {
+      for (const doc of snap.docs) {
+        const lat = doc.get('address.latitude');
+        const lng = doc.get('address.longitude');
+
+        const distanceInKm = geofire.distanceBetween(
+          [lat, lng],
+          [center.latitude, center.longitude],
+        );
+        const distanceInM = distanceInKm * 1000;
+        if (distanceInM <= radiusInM) {
+          matchingDocs.push({
+            id: doc.id,
+            ...doc.data()[0],
+          });
+        }
+      }
+    }
+    return matchingDocs;
+  } catch (error) {
+    console.error('GET_NEARBY_LISTINGS_ERROR', error);
     return [];
   }
 };

@@ -8,3 +8,4 @@ export {default as AccountDetails} from './AccountDetails';
 export {default as AdoptionDetails} from './AdoptionDetails';
 export {default as MyAdoptionListings} from './MyAdoptionListings';
 export {default as AdoptionOwnerProfile} from './AdoptionOwnerProfile'
+export {default as NearAdoptions} from './NearAdoptions';

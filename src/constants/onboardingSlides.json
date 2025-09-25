@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "title": "Peticim'e Hoş Geldin",
+    "subTitle": "Can dostunu sahiplenmenin en kolay ve güvenilir yolu.",
+    "buttonText": "Devam",
+    "icon": {
+      "type": "ion",
+      "color": "#FFFFFF",
+      "name": "paw",
+      "size": 100
+    }
+  },
+  {
+    "id": 2,
+    "title": "Yakındaki İlanları Keşfet",
+    "subTitle": "Konum izni ver, sana en yakın ilanları hemen gör.",
+    "buttonText": "Konum İzni Ver",
+    "icon": {
+      "type": "ion",
+      "color": "#FFFFFF",
+      "name": "location",
+      "size": 100
+    }
+  },
+  {
+    "id": 3,
+    "title": "Anında Haberdar Ol",
+    "subTitle": "Bildirimlere izin ver, yeni ilanlardan ve gelişmelerden hemen haberin olsun.",
+    "buttonText": "Bildirim İzni Ver",
+    "icon": {
+      "type": "ion",
+      "color": "#FFFFFF",
+      "name": "notifications",
+      "size": 100
+    }
+  },
+  {
+    "id": 4,
+    "title": "Hazırsın!",
+    "subTitle": "Şimdi hesabını oluştur, ilanlara göz at veya kendi ilanını paylaş.",
+    "buttonText": "Başlayalım",
+    "icon": {
+      "type": "ion",
+      "color": "#FFFFFF",
+      "name": "thumbs-up-sharp",
+      "size": 100
+    }
+  }
+]

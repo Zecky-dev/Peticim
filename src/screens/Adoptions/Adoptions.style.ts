@@ -5,7 +5,8 @@ export default StyleSheet.create({
     flex: 1,
     paddingBottom: 12,
     paddingHorizontal: 12,
-    gap: 8,
+    paddingTop: 12,
+    gap: 12,
     backgroundColor: '#e3e3e3',
   },
   separator: {

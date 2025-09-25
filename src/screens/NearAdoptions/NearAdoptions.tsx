@@ -13,6 +13,7 @@ import styles from './NearAdoptions.style';
 import colors from '@utils/colors';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ListingItem } from 'types/global';
 
 const NearAdoptions = () => {
   const [coordinates, setCoordinates] = useState<{

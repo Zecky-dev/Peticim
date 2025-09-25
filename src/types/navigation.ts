@@ -1,3 +1,5 @@
+import { ListingItem, User } from "./global";
+
 declare global {
   type AuthStackParamList = {
     Login: { prefilledEmail?: string };

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -6,6 +6,7 @@ import {
   View,
   PermissionsAndroid,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@config/toastConfig';
 import {
@@ -30,14 +31,27 @@ import {
   MyAdoptionListings,
   AdoptionOwnerProfile,
   NearAdoptions,
+  OnBoarding,
 } from '@screens';
 import { HeaderLogo, Icon } from '@components';
 
 import LoadingProvider from '@context/LoadingContext';
 import AuthProvider, { useAuth } from '@context/AuthContext';
 
+import {
+  setupNotificationChannel,
+  getFcmTokenService,
+  listenFcmTokenRefreshService,
+  listenForegroundNotifications,
+  setBackgroundNotificationHandler,
+} from '@firebase/notificationService';
+
 import colors from '@utils/colors';
 import styles from './App.style';
+
+import { onMessage } from '@react-native-firebase/messaging';
+import { cm } from '@firebase/firebase';
+import notifee from '@notifee/react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -193,34 +207,55 @@ function AppStack() {
 
 const RootNavigator = () => {
   const { user, initializing } = useAuth();
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = React.useState<
+    boolean | null
+  >(null);
 
   React.useEffect(() => {
-    const requestNotificationPermission = async () => {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('Bildirim izni verildi');
-        } else {
-          console.log('Bildirim izni reddedildi');
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    };
-    if (user) {
-      requestNotificationPermission();
-    }
-  }, [user]);
+    checkOnboardingStatus();
+  }, []);
 
-  if (initializing) {
+  const checkOnboardingStatus = async () => {
+    try {
+      const onboardingStatus = await AsyncStorage.getItem(
+        'onboarding_completed',
+      );
+      setIsOnboardingCompleted(onboardingStatus === 'true');
+    } catch (error) {
+      console.log('Error checking onboarding status:', error);
+      setIsOnboardingCompleted(false);
+    }
+  };
+
+  const handleOnboardingComplete = async () => {
+    try {
+      await AsyncStorage.setItem('onboarding_completed', 'true');
+      setIsOnboardingCompleted(true);
+    } catch (error) {
+      console.log('Error saving onboarding status:', error);
+    }
+  };
+
+  if (initializing || isOnboardingCompleted === null) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
+
+  // Eğer onboarding henüz tamamlanmamışsa, onboarding ekranını göster
+  if (!isOnboardingCompleted) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="OnBoarding">
+          {() => <OnBoarding onComplete={handleOnboardingComplete} />}
+        </Stack.Screen>
+      </Stack.Navigator>
+    );
+  }
+
+  // Onboarding tamamlandıysa, kullanıcı durumuna göre ekranı göster
   return user ? <AppStack /> : <AuthStack />;
 };
 
@@ -242,6 +277,32 @@ const AppContent = () => {
 };
 
 export default function App() {
+  useEffect(() => {
+    // Kanal oluştur
+    setupNotificationChannel();
+
+    // Token al
+    getFcmTokenService().then(token => {
+      if (token) console.log('FCM Token:', token);
+    });
+
+    // Token yenilenmesini dinle
+    const unsubscribeToken = listenFcmTokenRefreshService(token => {
+      // Backend’e gönder
+    });
+
+    // Foreground mesajları dinle
+    const unsubscribeForeground = listenForegroundNotifications();
+
+    // Background handler
+    setBackgroundNotificationHandler();
+
+    return () => {
+      unsubscribeToken();
+      unsubscribeForeground();
+    };
+  }, []);
+
   return (
     <SafeAreaProvider>
       <AppContent />

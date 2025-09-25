@@ -206,9 +206,7 @@ const Adoptions = () => {
 
   return (
     <View style={styles.container}>
-      <View style={{ marginTop: 12 }}>
-        <InformationBox />
-      </View>
+      <InformationBox />
       <View style={styles.topContainer}>
         <TouchableOpacity
           style={[

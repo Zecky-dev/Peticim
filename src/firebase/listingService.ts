@@ -23,11 +23,16 @@ import {
 import { uploadImages, deleteImages } from '@api/image';
 import { showToast } from '@config/toastConfig';
 import * as geofire from 'geofire-common';
+import { Filter } from 'types/global';
 
 const listingsCollection = collection(db, 'Listings');
 let lastVisible: FirebaseFirestoreTypes.QueryDocumentSnapshot | null = null;
 
-const applyFilters = (q: any, filters?: Filter[], onlyApproved: boolean = true) => {
+const applyFilters = (
+  q: any,
+  filters?: Filter[],
+  onlyApproved: boolean = true,
+) => {
   if (onlyApproved) {
     q = query(q, where('isApproved', '==', true));
   }
@@ -67,7 +72,10 @@ export const createListing = async (
   }
 };
 
-export const getFirstListings = async (filters: Filter[] = [],onlyApproved: boolean = true) => {
+export const getFirstListings = async (
+  filters: Filter[] = [],
+  onlyApproved: boolean = true,
+) => {
   try {
     let q = query(listingsCollection, orderBy('createdAt', 'desc'), limit(10));
     q = applyFilters(q, filters, onlyApproved);
@@ -90,10 +98,18 @@ export const getFirstListings = async (filters: Filter[] = [],onlyApproved: bool
   }
 };
 
-export const getNextListings = async (filters: Filter[] = [], onlyApproved: boolean = true) => {
+export const getNextListings = async (
+  filters: Filter[] = [],
+  onlyApproved: boolean = true,
+) => {
   if (!lastVisible) return [];
   try {
-    let q = query(listingsCollection, orderBy('createdAt', 'desc'), startAfter(lastVisible), limit(10));
+    let q = query(
+      listingsCollection,
+      orderBy('createdAt', 'desc'),
+      startAfter(lastVisible),
+      limit(10),
+    );
     q = applyFilters(q, filters, onlyApproved);
 
     const documentSnapshots = await getDocs(q);
@@ -189,6 +205,7 @@ export const getListingsByIds = async (listingIds: string[]) => {
 export const getNearbyListings = async (
   center: { latitude: number; longitude: number },
   radius: number,
+  onlyApproved: boolean = true,
 ) => {
   try {
     const radiusInM = radius * 1000;
@@ -220,14 +237,19 @@ export const getNearbyListings = async (
           [center.latitude, center.longitude],
         );
         const distanceInM = distanceInKm * 1000;
+
+        const isApproved = doc.get('isApproved');
+
         if (distanceInM <= radiusInM) {
+          if (onlyApproved && !isApproved) continue;
           matchingDocs.push({
             id: doc.id,
-            ...doc.data()[0],
+            ...doc.data(),
           });
         }
       }
     }
+
     return matchingDocs;
   } catch (error) {
     console.error('GET_NEARBY_LISTINGS_ERROR', error);

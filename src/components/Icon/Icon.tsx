@@ -8,8 +8,9 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import OctIcon from 'react-native-vector-icons/Octicons';
+import { IconType } from 'types/global';
 
-export type IconType =
+export type IconNames =
   | 'material'
   | 'material-community'
   | 'fontawesome'
@@ -19,19 +20,13 @@ export type IconType =
   | 'feather'
   | 'oct';
 
-export type IconProps = {
-  type?: IconType;
-  name: string;
-  color?: string;
-  size?: number;
-};
 
 const Icon = ({
   type = 'material-community',
   name,
   color = 'black',
   size = 16,
-}: IconProps) => {
+}: IconType) => {
   let IconComponent: React.ComponentType<any>;
 
   switch (type) {

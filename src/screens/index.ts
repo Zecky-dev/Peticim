@@ -9,3 +9,4 @@ export {default as AdoptionDetails} from './AdoptionDetails';
 export {default as MyAdoptionListings} from './MyAdoptionListings';
 export {default as AdoptionOwnerProfile} from './AdoptionOwnerProfile'
 export {default as NearAdoptions} from './NearAdoptions';
+export {default as OnBoarding} from './Onboarding';

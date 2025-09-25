@@ -1,3 +1,5 @@
+import { IconNames, IconProps } from "@components/Icon/Icon";
+
 interface PickerItem {
   label: string;
   value: string;
@@ -66,4 +68,19 @@ interface Filter {
   field: string;
   operator: '<' | '<=' | '==' | '!=' | '>' | '>=' | 'array-contains' | 'in';
   value: any;
+}
+
+interface IconType {
+  type?: IconNames;
+  name: string;
+  color?: string;
+  size?: number;
+};
+
+interface OnBoardingSlide {
+  id: number;
+  title: string;
+  subTitle: string; 
+  buttonText: string;
+  icon: IconType;
 }

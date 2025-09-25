@@ -1,12 +1,19 @@
 import {
   createUserWithEmailAndPassword,
+  FirebaseAuthTypes,
   signInWithEmailAndPassword,
   updateProfile,
 } from '@react-native-firebase/auth';
 import { auth, db } from './firebase';
 import { sendVerificationEmail } from '@api/auth';
-import { doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  updateDoc,
+} from '@react-native-firebase/firestore';
 import { showToast } from '@config/toastConfig';
+import { getFcmTokenService } from './notificationService';
 
 const createUserAccount = async (email: string, password: string) => {
   const userCredential = await createUserWithEmailAndPassword(
@@ -53,6 +60,15 @@ export const signUpUser = async (
   }
 };
 
+export const updateFCMToken = async (
+  user: FirebaseAuthTypes.User | null,
+  token: string | null,
+) => {
+  if (token && user) {
+    await updateDoc(doc(db, 'Users', user.uid), { fcmToken: token });
+  }
+};
+
 export const signInUser = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -65,9 +81,12 @@ export const signInUser = async (email: string, password: string) => {
       showToast({
         type: 'error',
         text1: 'Hata',
-        text2: 'E-posta adresi onaylanmamış.'
-      })
+        text2: 'E-posta adresi onaylanmamış.',
+      });
     }
+
+    getFcmTokenService().then(async token => updateFCMToken(user, token));
+
     return true;
   } catch (error: any) {
     console.error('SIGN_IN_USER_ERROR', error);

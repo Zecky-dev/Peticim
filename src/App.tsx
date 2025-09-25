@@ -49,9 +49,8 @@ import {
 import colors from '@utils/colors';
 import styles from './App.style';
 
-import { onMessage } from '@react-native-firebase/messaging';
-import { cm } from '@firebase/firebase';
-import notifee from '@notifee/react-native';
+import { auth} from '@firebase/firebase';
+import { updateFCMToken } from '@firebase/authService';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -261,7 +260,6 @@ const RootNavigator = () => {
 
 const AppContent = () => {
   const insets = useSafeAreaInsets();
-
   return (
     <>
       <NavigationContainer>
@@ -278,25 +276,13 @@ const AppContent = () => {
 
 export default function App() {
   useEffect(() => {
-    // Kanal oluştur
     setupNotificationChannel();
-
-    // Token al
-    getFcmTokenService().then(token => {
-      if (token) console.log('FCM Token:', token);
+    const unsubscribeToken = listenFcmTokenRefreshService(async token => {
+      const user = auth.currentUser;
+      updateFCMToken(user, token);
     });
-
-    // Token yenilenmesini dinle
-    const unsubscribeToken = listenFcmTokenRefreshService(token => {
-      // Backend’e gönder
-    });
-
-    // Foreground mesajları dinle
     const unsubscribeForeground = listenForegroundNotifications();
-
-    // Background handler
     setBackgroundNotificationHandler();
-
     return () => {
       unsubscribeToken();
       unsubscribeForeground();

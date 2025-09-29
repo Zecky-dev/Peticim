@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from '@react-native-firebase/firestore';
 import { db } from '@firebase/firebase';
 import { useLoading } from '@context/LoadingContext';
-import { getImages } from '@api/image';
 import { useAuth } from '@context/AuthContext';
 
 export function useUserDetails(userId: string | null) {
@@ -24,16 +23,7 @@ export function useUserDetails(userId: string | null) {
         if (snap.exists()) {
           const userData = snap.data();
           if (userData && user) {
-            const profilePictureRes = await getImages(
-              [userData.profilePicture.publicId],
-            );
-            const profilePictureURL = Object.entries(
-              profilePictureRes.urls,
-            ).find(([key]) => key.startsWith('profile_images/'))?.[1];
-            setUserDetails({
-              ...snap.data(),
-              profilePictureURL,
-            } as User);
+            setUserDetails(snap.data());
           }
         } else {
           setUserDetails(null);

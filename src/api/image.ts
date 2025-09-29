@@ -23,8 +23,8 @@ const uploadImages = async (
     });
     const res = await axiosClient.post('/image/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
       },
     });
     return res.data;
@@ -58,26 +58,6 @@ const classifyAnimal = async (images: any[]) => {
   }
 };
 
-// publicId mantığı kaldırılacak, resim url'leri doğrudan ilanlarda tutulacak.
-const getImages = async (publicIds: string[]) => {
-  const token = await getValidToken();
-  if (!token || !publicIds) return;
-  try {
-    const res = await axiosClient.post(
-      '/image',
-      { publicIds },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    return res.data;
-  } catch (error: any) {
-    console.error('GET_IMAGES_ERROR', error);
-  }
-};
-
 const deleteImages = async (userId: string, listingId: string) => {
   const token = await getValidToken();
   if (!userId || !listingId) return;
@@ -96,4 +76,4 @@ const deleteImages = async (userId: string, listingId: string) => {
   }
 };
 
-export { uploadImages, getImages, classifyAnimal, deleteImages };
+export { uploadImages, classifyAnimal, deleteImages };

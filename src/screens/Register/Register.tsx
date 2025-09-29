@@ -21,12 +21,11 @@ import { useAuth } from '@context/AuthContext';
 
 import styles from './Register.style';
 
-
 const Register = () => {
+  const { register } = useAuth();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { register } = useAuth();
 
   const handleRegister = async (
     email: string,
@@ -78,7 +77,7 @@ const Register = () => {
           { top: insets.top + 16, left: insets.left + 16 },
         ]}
       >
-        <CircleButton iconSize={36}/>
+        <CircleButton iconSize={36} />
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
@@ -105,9 +104,6 @@ const Register = () => {
                 email: values.email,
                 role: 'user',
                 isBanned: false,
-                profilePicture: '',
-                address: '',
-                phone: '',
               };
               await handleRegister(values.email, values.password, otherData);
               setSubmitting(false);
@@ -119,7 +115,6 @@ const Register = () => {
               handleSubmit,
               values,
               errors,
-              touched,
               isSubmitting,
             }) => (
               <View style={styles.form}>
@@ -157,7 +152,7 @@ const Register = () => {
                     placeholder="ornek@mail.com"
                     keyboardType="email-address"
                     value={values.email}
-                    autoCapitalize='none'
+                    autoCapitalize="none"
                   />
                   {errors.email && isSubmitted && (
                     <Alert withIcon={false} message={errors.email} />
@@ -173,7 +168,7 @@ const Register = () => {
                     maxLength={12}
                     keyboardType="default"
                     secureContent={true}
-                    autoCapitalize='none'
+                    autoCapitalize="none"
                   />
                   {errors.password && isSubmitted && (
                     <Alert withIcon={false} message={errors.password} />

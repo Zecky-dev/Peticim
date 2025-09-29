@@ -8,6 +8,7 @@ import {
   getListingsByIds,
 } from '@firebase/listingService';
 import { useUserDetails } from './useUserDetails';
+import { ListingItem, Filter } from 'types/global';
 
 export function useListings(
   filters: Filter[] = [],

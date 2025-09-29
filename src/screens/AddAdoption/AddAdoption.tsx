@@ -18,10 +18,7 @@ import { useFormik } from 'formik';
 import { useLoading } from '@context/LoadingContext';
 import { useAuth } from '@context/AuthContext';
 import { useImagePicker } from '@hooks/useImagePicker';
-import {
-  useFocusEffect,
-  useNavigation,
-} from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { adoptionValidationSchema } from '@utils/validationSchemas';
 import { createListing } from '@firebase/listingService';
 import { classifyAnimal } from '@api/image';
@@ -34,6 +31,7 @@ import useLocation from '@hooks/useLocation';
 import { getCities, getNeighborhoods, getDistricts } from '@api/location';
 import { showToast } from '@config/toastConfig';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { PickerItem } from 'types/global';
 import * as geofire from 'geofire-common';
 
 const { width } = Dimensions.get('window');
@@ -55,10 +53,10 @@ const AddAdoption = () => {
       photos: [],
       animalType: '',
       animalBreed: '',
-      age: null,
       vaccinated: false,
       sterilized: false,
       phone: '',
+      age: null,
       address: null,
     },
     onSubmit: () => handleSubmit(),
@@ -178,6 +176,10 @@ const AddAdoption = () => {
   const handleTypeChange = (type: string) => {
     formik.setFieldValue('animalType', type);
     formik.setFieldValue('animalBreed', '');
+    if (type !== 'Köpek' && type !== 'Kedi') {
+      formik.setFieldValue('vaccinated', null);
+      formik.setFieldValue('sterilized', null);
+    }
     const selectedAnimalType = animalData.find(a => a.type === type);
     const breeds =
       selectedAnimalType?.breeds.map(breed => ({
@@ -191,35 +193,50 @@ const AddAdoption = () => {
     if (!user?.uid || !canSubmit) return;
     showLoading();
     formik.setSubmitting(true);
+    const {
+      title,
+      description,
+      animalType,
+      animalBreed,
+      age,
+      vaccinated,
+      sterilized,
+      phone,
+      address,
+      photos,
+    } = formik.values;
+
     const listingData = {
-      title: formik.values.title,
-      description: formik.values.description,
-      animalType: formik.values.animalType,
-      animalBreed: formik.values.animalBreed,
-      age: formik.values.age,
-      vaccinated: formik.values.vaccinated,
-      sterilized: formik.values.sterilized,
-      phone: formik.values.phone,
-      address: formik.values.address,
+      title,
+      description,
+      animalType,
+      animalBreed,
+      age,
+      vaccinated,
+      sterilized,
+      phone,
+      address,
       views: 0,
-      geohash: formik.values.address.geohash,
-      isApproved: false,
+      geohash: address?.geohash ?? '',
+      status: 'pending',
     };
+
     const createListingSuccess = await createListing(
       listingData,
-      formik.values.photos,
+      photos,
       user.uid,
     );
+
     if (createListingSuccess) {
       showToast({
         type: 'success',
         text1: 'İlanınız oluşturuldu',
-        text2: 'İlanınız onay sürecindedir, onaylandıktan sonra yayına alınacaktır.',
-        duration: 'long'
-      })
+        text2:
+          'İlanınız onay sürecindedir, onaylandıktan sonra yayına alınacaktır.',
+        duration: 'long',
+      });
 
-      navigation.navigate('ProfileStack', { screen: 'MyAdoptionListings' })
-
+      navigation.navigate('ProfileStack', { screen: 'MyAdoptionListings' });
     }
     hideLoading();
     formik.setSubmitting(false);
@@ -267,7 +284,6 @@ const AddAdoption = () => {
     }
   };
 
-  // Konum için gerekli
   useEffect(() => {
     const getCityList = async () => {
       const citiesRes = await getCities();
@@ -333,7 +349,7 @@ const AddAdoption = () => {
           setLocationModalVisible(false);
           return;
         }
-        const hash = geofire.geohashForLocation([+data[0].lat, +data[0].lon])
+        const hash = geofire.geohashForLocation([+data[0].lat, +data[0].lon]);
         const addressInfo = {
           city: selectedCity.label,
           district: selectedDistrict.label,

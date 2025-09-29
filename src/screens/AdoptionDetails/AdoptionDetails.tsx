@@ -243,28 +243,33 @@ const AdoptionDetails = () => {
               />
               <Text style={styles.infoBoxValue}>{data.address.city}</Text>
             </View>
-            <View style={styles.infoBox}>
-              <Icon
-                name="medkit-outline"
-                color={colors.primary}
-                type="ion"
-                size={32}
-              />
-              <Text style={styles.infoBoxValue}>
-                {data.sterilized ? 'Kısırlaştırılmış' : 'Kısırlaştırılmamış'}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Icon
-                name="needle"
-                color={colors.primary}
-                type="material-community"
-                size={32}
-              />
-              <Text style={styles.infoBoxValue}>
-                {data.vaccinated ? 'Aşıları Tam' : 'Aşısı Yok'}
-              </Text>
-            </View>
+            {typeof data.sterilized === 'boolean' && (
+              <View style={styles.infoBox}>
+                <Icon
+                  name="medkit-outline"
+                  color={colors.primary}
+                  type="ion"
+                  size={32}
+                />
+                <Text style={styles.infoBoxValue}>
+                  {data.sterilized ? 'Kısırlaştırılmış' : 'Kısırlaştırılmamış'}
+                </Text>
+              </View>
+            )}
+
+            {typeof data.vaccinated === 'boolean' && (
+              <View style={styles.infoBox}>
+                <Icon
+                  name="needle"
+                  color={colors.primary}
+                  type="material-community"
+                  size={32}
+                />
+                <Text style={styles.infoBoxValue}>
+                  {data.vaccinated ? 'Aşıları Tam' : 'Aşısı Yok'}
+                </Text>
+              </View>
+            )}
           </View>
 
           <MapView
@@ -293,7 +298,7 @@ const AdoptionDetails = () => {
             <View style={styles.adsOwnerContainer}>
               <Image
                 source={
-                  !listingOwnerUserDetails?.profilePicture.url
+                  !listingOwnerUserDetails?.profilePicture?.url
                     ? require('@assets/images/avatar_default.png')
                     : { uri: listingOwnerUserDetails?.profilePicture.url }
                 }

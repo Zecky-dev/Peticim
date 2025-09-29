@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, CircleButton, Icon } from '@components';
 import { useAuth } from '@context/AuthContext';
 import { useImagePicker } from '@hooks/useImagePicker';

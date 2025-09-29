@@ -87,7 +87,7 @@ const AccountDetails = () => {
         >
           <View>
             <View style={{ marginBottom: 16 }}>
-              <CircleButton/>
+              <CircleButton backgroundColor={colors.white} iconColor={colors.primary}/>
             </View>
 
             <Formik

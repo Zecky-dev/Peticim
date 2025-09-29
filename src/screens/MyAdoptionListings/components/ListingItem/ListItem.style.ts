@@ -32,9 +32,15 @@ export default StyleSheet.create({
     fontSize: 13,
   },
   buttonLeft: { flexDirection: 'row', gap: 12, flex: 1 },
-  image: { width: 80, height: 80, borderRadius: 4, },
+  image: { width: 80, height: 80, borderRadius: 4 },
   approvalText: {
     fontFamily: 'Comfortaa-Bold',
     fontSize: 12,
+  },
+  rejectionTitle: {
+    fontFamily: 'Comfortaa-Bold',
+  },
+  rejectionText: {
+    fontFamily: 'Comfortaa-Regular',
   }
 });

@@ -71,7 +71,7 @@ const ForgotPassword = () => {
           { top: insets.top + 16, left: insets.left + 16 },
         ]}
       >
-        <CircleButton iconSize={36}/>
+        <CircleButton iconSize={36} />
       </View>
       <View style={styles.forgotPasswodForm}>
         <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>

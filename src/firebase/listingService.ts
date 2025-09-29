@@ -34,7 +34,7 @@ const applyFilters = (
   onlyApproved: boolean = true,
 ) => {
   if (onlyApproved) {
-    q = query(q, where('isApproved', '==', true));
+    q = query(q, where('status', '==', 'approved'));
   }
 
   if (!filters) return q;
@@ -178,23 +178,37 @@ export const toggleFavorite = async (listingId?: string, userId?: string) => {
 };
 
 export const getListingsByIds = async (listingIds: string[]) => {
-  if (!listingIds || listingIds.length === 0) {
-    return [];
-  }
-  try {
-    const q = query(listingsCollection, where(documentId(), 'in', listingIds));
-    const documentSnapshots = await getDocs(q);
+  if (!listingIds || listingIds.length === 0) return [];
 
-    if (documentSnapshots.empty) {
-      return [];
+  try {
+    const chunks: string[][] = [];
+    for (let i = 0; i < listingIds.length; i += 10) {
+      chunks.push(listingIds.slice(i, i + 10));
     }
-    const listings = documentSnapshots.docs.map(
-      (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
+
+    const allListings: any[] = [];
+
+    for (const chunk of chunks) {
+      const q = query(
+        listingsCollection,
+        where(documentId(), 'in', chunk),
+        where('status', '==', 'approved'),
+      );
+
+      const documentSnapshots = await getDocs(q);
+
+      const listings = documentSnapshots.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-      }),
+      }));
+
+      allListings.push(...listings);
+    }
+
+    // JS tarafında sıralama
+    return allListings.sort(
+      (a, b) => b.createdAt.toMillis() - a.createdAt.toMillis(),
     );
-    return listings;
   } catch (error) {
     console.error('GET_LISTINGS_BY_IDS_ERROR', error);
     return [];
@@ -238,10 +252,10 @@ export const getNearbyListings = async (
         );
         const distanceInM = distanceInKm * 1000;
 
-        const isApproved = doc.get('isApproved');
+        const approveStatus = doc.get('status');
 
         if (distanceInM <= radiusInM) {
-          if (onlyApproved && !isApproved) continue;
+          if (approveStatus !== "approved") continue;
           matchingDocs.push({
             id: doc.id,
             ...doc.data(),

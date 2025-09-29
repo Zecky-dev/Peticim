@@ -43,14 +43,8 @@ const Input = ({
   ...rest
 }: InputProps) => {
   const [hidden, setHidden] = useState(secureContent);
-  const [characterCount, setCharacterCount] = useState(value?.length || 0);
-
-  useEffect(() => {
-    if (value) {
-      setCharacterCount(value.length);
-    }
-  }, [value]);
-
+  const characterCount = value?.length || 0;
+  
   const getCounterColor = () => {
     if (!maxLength) return {};
     if (characterCount >= maxLength) {

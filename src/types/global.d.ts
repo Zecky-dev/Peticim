@@ -30,7 +30,9 @@ interface ListingItem {
     longitude: number;
   };
   views: number;
-  isApproved: boolean;
+  status: "approved" | "rejected" | "pending";
+  rejectionReason: string;
+  updatedAt: Date;
 }
 
 interface User {

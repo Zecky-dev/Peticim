@@ -55,7 +55,7 @@ export default StyleSheet.create({
     borderColor: colors.error,
   },
   loginContainer: {
-    width: '75%',
+    width: '80%',
     alignSelf: 'center',
     gap: 12,
   },

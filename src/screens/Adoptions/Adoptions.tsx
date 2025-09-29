@@ -44,6 +44,8 @@ import styles from './Adoptions.style';
 import animalFilters from '../../constants/animalFilters.json';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { isEqual } from '@utils/basicValidations';
+import { PickerItem } from 'types/global';
+import { Filter } from 'react-native-svg';
 
 const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : AD_BANNER_UNIT_ID;
 
@@ -77,35 +79,38 @@ const Adoptions = () => {
 
   const handleCitySelect = async (city: PickerItem) => {
     const districtsRes = await getDistricts(Number(city.value));
-    setTempFilters(prev => {
-      const withoutCityAndDistrict = prev.filter(
-        f => f.field !== 'address.city' && f.field !== 'address.district',
-      );
-      return [
-        ...withoutCityAndDistrict,
-        { field: 'address.city', operator: '==', value: city.label },
-      ];
-    });
+    if (districtsRes) {
+      setTempFilters((prev: any) => {
+        const withoutCityAndDistrict = prev.filter(
+          (f: any) =>
+            f.field !== 'address.city' && f.field !== 'address.district',
+        );
+        return [
+          ...withoutCityAndDistrict,
+          { field: 'address.city', operator: '==', value: city.label },
+        ];
+      });
 
-    setLocation(prev => ({
-      ...prev,
-      selectedCity: city,
-      selectedDistrict: null,
-      districts: districtsRes.map((d: any) => ({
-        label: d.name,
-        value: d.id,
-      })),
-    }));
+      setLocation((prev: any) => ({
+        ...prev,
+        selectedCity: city,
+        selectedDistrict: null,
+        districts: districtsRes.map((d: any) => ({
+          label: d.name,
+          value: d.id,
+        })),
+      }));
+    }
   };
   const handleDistrictSelect = async (district: PickerItem) => {
-    setTempFilters(prev => {
+    setTempFilters((prev: any) => {
       const withoutDistrict = prev.filter(f => f.field !== 'address.district');
       return [
         ...withoutDistrict,
         { field: 'address.district', operator: '==', value: district.label },
       ];
     });
-    setLocation(prev => ({
+    setLocation((prev: any) => ({
       ...prev,
       selectedDistrict: district,
     }));
@@ -114,10 +119,12 @@ const Adoptions = () => {
   useEffect(() => {
     const fetchCities = async () => {
       const citiesRes = await getCities();
-      setLocation(prev => ({
-        ...prev,
-        cities: citiesRes.map((c: any) => ({ label: c.name, value: c.id })),
-      }));
+      if (citiesRes) {
+        setLocation((prev: any) => ({
+          ...prev,
+          cities: citiesRes.map((c: any) => ({ label: c.name, value: c.id })),
+        }));
+      }
     };
     fetchCities();
   }, []);
@@ -181,7 +188,7 @@ const Adoptions = () => {
   const resetTempFiltersAndCloseModal = () => {
     setTempFilters([]);
     setFilters([]);
-    setLocation(prev => ({
+    setLocation((prev: any) => ({
       ...prev,
       selectedCity: null,
       selectedDistrict: null,
@@ -207,7 +214,19 @@ const Adoptions = () => {
   return (
     <View style={styles.container}>
       <InformationBox />
-      <View style={styles.topContainer}>
+
+      {/* Üst butonlar */}
+      <View
+        style={[
+          styles.topContainer,
+          {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          },
+        ]}
+      >
+        {/* Sol taraf (favoriler) */}
         <TouchableOpacity
           style={[
             styles.filterButton,
@@ -231,6 +250,8 @@ const Adoptions = () => {
             Favoriler
           </Text>
         </TouchableOpacity>
+
+        {/* Sağ taraf (filtre) */}
         <TouchableOpacity
           style={[
             styles.filterButton,
@@ -247,7 +268,7 @@ const Adoptions = () => {
           )}
         </TouchableOpacity>
       </View>
-
+      {/* İlanlar listesi */}
       <FlatList
         ref={flatListRef}
         onScroll={e => {
@@ -276,7 +297,7 @@ const Adoptions = () => {
         ListEmptyComponent={() => {
           return (
             <EmptyList
-              label="İlan bulunamadı"
+              label={showFavorites ? "Favori ilanın bulunamadı" : "İlan bulunamadı"}
               image={
                 <LottieView
                   autoPlay={true}
@@ -290,6 +311,7 @@ const Adoptions = () => {
         }}
       />
 
+      {/* Filtre modalı */}
       <Modal
         style={styles.filterModalContainer}
         isVisible={filterModalVisible}
@@ -358,6 +380,7 @@ const Adoptions = () => {
               })}
             </View>
           </View>
+
           <Picker
             items={location.cities}
             label="Şehir"
@@ -373,6 +396,7 @@ const Adoptions = () => {
               onSelect={handleDistrictSelect}
             />
           )}
+
           <View style={{ marginTop: 6 }}>
             <Button label="Filtre Uygula" onPress={applyFilters} />
           </View>

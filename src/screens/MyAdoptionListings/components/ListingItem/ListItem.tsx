@@ -5,8 +5,9 @@ import { deleteListing } from '@firebase/listingService';
 import { useAuth } from '@context/AuthContext';
 import styles from './ListItem.style';
 import { Icon } from '@components';
-import colors from '@utils/colors';
 import { useNavigation } from '@react-navigation/native';
+import { ListingItem } from 'types/global';
+import colors from '@utils/colors';
 
 type ListingItemProps = {
   item: ListingItem;
@@ -51,7 +52,13 @@ const ListItem = ({ item, onDeleted }: ListingItemProps) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.buttonLeft} onPress={navigateToListing}>
-        <Image source={{ uri: item.images[0]?.url }} style={styles.image} />
+        {item.images?.length > 0 ? (
+          <Image source={{ uri: item.images[0].url }} style={styles.image} />
+        ) : (
+          <View style={[styles.image, { backgroundColor: colors.gray }]}>
+            <Icon name="image-outline" size={32} color={colors.white} />
+          </View>
+        )}
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.animalType}>{item.animalType}</Text>
@@ -60,12 +67,34 @@ const ListItem = ({ item, onDeleted }: ListingItemProps) => {
           <Text
             style={[
               styles.approvalText,
-              { color: item.isApproved ? colors.success : colors.error },
+              {
+                color:
+                  item.status === 'approved'
+                    ? colors.success
+                    : item.status === 'pending'
+                    ? colors.warning
+                    : colors.error,
+              },
             ]}
           >
-            {item.isApproved ? 'Onaylandı' : 'Onay Bekliyor'}
+            {item.status === 'approved'
+              ? 'Onaylandı'
+              : item.status === 'pending'
+              ? 'Onay bekliyor'
+              : 'Reddedildi'}
           </Text>
-          {item.isApproved && (
+
+          {/* Reddedilme nedeni */}
+          {item.status === 'rejected' && item.rejectionReason && (
+            <Text style={styles.rejectionText}>
+              <Text style={styles.rejectionTitle}>
+                Sebep:{' '}
+              </Text>
+              {item.rejectionReason}
+            </Text>
+          )}
+
+          {item.status === 'approved' && (
             <View style={styles.viewsContainer}>
               <Icon name="eye-outline" color={colors.black_50} size={18} />
               <Text style={styles.viewsText}>{item.views} görüntülenme</Text>

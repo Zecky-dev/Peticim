@@ -3,8 +3,14 @@ import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { onAuthStateChanged, signOut } from '@react-native-firebase/auth';
 import { sendPasswordResetEmail } from '@api/auth';
 import { useLoading } from './LoadingContext';
-import { auth } from '@firebase/firebase';
-import { signInUser, signUpUser } from '@firebase/authService';
+import { auth, db } from '@firebase/firebase';
+import {
+  googleSignIn,
+  resetPassword,
+  signInUser,
+  signUpUser,
+} from '@firebase/authService';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -17,6 +23,7 @@ interface AuthContextType {
   register: (email: string, password: string, otherData: any) => Promise<void>;
   logout: () => Promise<void>;
   passwordReset: (email: string) => Promise<void>;
+  googleLogin: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,7 +71,11 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       showLoading();
+      try {
+        await GoogleSignin.signOut();
+      } catch (_) {}
       await signOut(auth);
+      setUser(null);
     } finally {
       hideLoading();
     }
@@ -73,7 +84,18 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   const passwordReset = async (email: string) => {
     try {
       showLoading();
-      await sendPasswordResetEmail(email);
+      await resetPassword(email);
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const googleLogin = async () => {
+    try {
+      showLoading();
+      await googleSignIn();
+    } catch (error) {
+      console.error('GOOGLE_LOGIN_ERROR:', error);
     } finally {
       hideLoading();
     }
@@ -86,6 +108,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     register,
     logout,
     passwordReset,
+    googleLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

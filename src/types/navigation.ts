@@ -5,6 +5,7 @@ declare global {
     Login: { prefilledEmail?: string };
     Register: undefined;
     ForgotPassword: { prefilledEmail?: string };
+    AuthMethodChoice: undefined;
   };
 
   type ProfileStackParamList = {

@@ -1,36 +1,52 @@
 import { useAuth } from '@context/AuthContext';
 import { useListings } from '@hooks/useListings';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, ActivityIndicator } from 'react-native';
 import ListItem from './components/ListingItem';
 import { EmptyList } from '@components';
-
 import LottieView from 'lottie-react-native';
 import styles from './MyAdoptionListings.style';
 import colors from '@utils/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
 const MyAdoptionListings = () => {
   const { user } = useAuth();
   const { listings, loadInitialListings, setListings, hasLoadedOnce } =
     useListings();
-  const userListings = listings.filter((item: any) => !item.isAd);
-  useEffect(() => {
-    loadInitialListings([
-      { field: 'userId', operator: '==', value: user?.uid },
-    ], false);
-  }, []);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Sayfa focus olduğunda veriyi yenile
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.uid) {
+        loadInitialListings(
+          [{ field: 'userId', operator: '==', value: user?.uid }],
+          false,
+        );
+      }
+    }, [user?.uid]),
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadInitialListings(
+      [{ field: 'userId', operator: '==', value: user?.uid }],
+      false,
+    );
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <FlatList
         contentContainerStyle={[
-          userListings.length === 0
+          listings.length === 0
             ? styles.emptyListingContainer
             : styles.listingsContainer,
         ]}
         showsVerticalScrollIndicator={false}
-        data={userListings}
+        data={listings}
         renderItem={({ item }) => (
           <ListItem
             item={item}
@@ -49,8 +65,8 @@ const MyAdoptionListings = () => {
             <EmptyList
               image={
                 <LottieView
-                  autoPlay={true}
-                  loop={true}
+                  autoPlay
+                  loop
                   source={require('@assets/lottie/notFound.json')}
                   style={styles.notFoundAnimation}
                 />
@@ -60,6 +76,8 @@ const MyAdoptionListings = () => {
           );
         }}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       />
     </SafeAreaView>
   );

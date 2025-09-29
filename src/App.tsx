@@ -1,11 +1,5 @@
-import React, { useEffect } from 'react';
-import {
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  View,
-  PermissionsAndroid,
-} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@config/toastConfig';
@@ -32,6 +26,7 @@ import {
   AdoptionOwnerProfile,
   NearAdoptions,
   OnBoarding,
+  AuthMethodChoice,
 } from '@screens';
 import { HeaderLogo, Icon } from '@components';
 
@@ -40,23 +35,27 @@ import AuthProvider, { useAuth } from '@context/AuthContext';
 
 import {
   setupNotificationChannel,
-  getFcmTokenService,
   listenFcmTokenRefreshService,
   listenForegroundNotifications,
   setBackgroundNotificationHandler,
+  setupNotificationPressHandler,
+  setNavigationRef,
+  handlePendingNotificationActions,
 } from '@firebase/notificationService';
 
 import colors from '@utils/colors';
 import styles from './App.style';
 
-import { auth} from '@firebase/firebase';
+import { auth } from '@firebase/firebase';
 import { updateFCMToken } from '@firebase/authService';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="AuthMethodChoice" component={AuthMethodChoice} />
     <Stack.Screen name="Login" component={Login} />
     <Stack.Screen name="Register" component={Register} />
     <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
@@ -198,6 +197,7 @@ function AppStack() {
             }
             return { backgroundColor: colors.primary };
           })(),
+          popToTopOnBlur: true,
         })}
       />
     </Tab.Navigator>
@@ -210,7 +210,7 @@ const RootNavigator = () => {
     boolean | null
   >(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     checkOnboardingStatus();
   }, []);
 
@@ -243,7 +243,6 @@ const RootNavigator = () => {
     );
   }
 
-  // Eğer onboarding henüz tamamlanmamışsa, onboarding ekranını göster
   if (!isOnboardingCompleted) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -253,16 +252,14 @@ const RootNavigator = () => {
       </Stack.Navigator>
     );
   }
-
-  // Onboarding tamamlandıysa, kullanıcı durumuna göre ekranı göster
   return user ? <AppStack /> : <AuthStack />;
 };
 
-const AppContent = () => {
+const AppContent = ({ navigationRef, onNavigationReady }) => {
   const insets = useSafeAreaInsets();
   return (
     <>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef} onReady={onNavigationReady}>
         <LoadingProvider>
           <AuthProvider>
             <RootNavigator />
@@ -275,23 +272,56 @@ const AppContent = () => {
 };
 
 export default function App() {
+  const navigationRef = useRef<any>(null);
+
+  // INIT HELPER FUNCTIONS
+  const configureGoogleSignIn = () => {
+    GoogleSignin.configure({
+      webClientId:
+        '916856486435-5a8hal6o9hlq5vfgc210lbilsvrllncj.apps.googleusercontent.com',
+      offlineAccess: false,
+    });
+  };
+
+  const setupNotification = async () => {
+    await setupNotificationChannel();
+    setupNotificationPressHandler();
+    setBackgroundNotificationHandler();
+  };
+
+  // INIT FUNCTION
+  const initializeApp = async () => {
+    configureGoogleSignIn();
+    await setupNotification();
+  };
+
   useEffect(() => {
-    setupNotificationChannel();
+    initializeApp();
     const unsubscribeToken = listenFcmTokenRefreshService(async token => {
       const user = auth.currentUser;
       updateFCMToken(user, token);
     });
     const unsubscribeForeground = listenForegroundNotifications();
-    setBackgroundNotificationHandler();
     return () => {
       unsubscribeToken();
       unsubscribeForeground();
     };
   }, []);
 
+  // Navigation ready handler
+  const onNavigationReady = async () => {
+    if (navigationRef.current) {
+      setNavigationRef(navigationRef.current);
+      await handlePendingNotificationActions();
+    }
+  };
+
   return (
     <SafeAreaProvider>
-      <AppContent />
+      <AppContent
+        navigationRef={navigationRef}
+        onNavigationReady={onNavigationReady}
+      />
     </SafeAreaProvider>
   );
 }

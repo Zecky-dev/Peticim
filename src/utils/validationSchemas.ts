@@ -86,7 +86,7 @@ export const adoptionValidationSchema = yup.object().shape({
     .number()
     .typeError('Yaş sadece sayı olmalıdır.')
     .moreThan(0, 'Yaş 0’dan büyük olmalıdır.')
-    .max(20, 'Yaş 30\'dan büyük olamaz.')
+    .max(20, "Yaş 20'den büyük olamaz.")
     .test(
       'is-half-or-int',
       'Yaş sadece tam sayı veya yarım değerlikler olabilir.',
@@ -110,6 +110,6 @@ export const adoptionValidationSchema = yup.object().shape({
     })
     .required('Adres seçilmelidir.'),
 
-  vaccinated: yup.boolean(),
-  sterilized: yup.boolean(),
+  vaccinated: yup.boolean().nullable(),
+  sterilized: yup.boolean().nullable(),
 });

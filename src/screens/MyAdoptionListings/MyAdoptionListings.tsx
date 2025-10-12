@@ -33,6 +33,7 @@ const MyAdoptionListings = () => {
     await loadInitialListings(
       [{ field: 'userId', operator: '==', value: user?.uid }],
       false,
+      true
     );
     setRefreshing(false);
   };

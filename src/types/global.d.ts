@@ -1,4 +1,4 @@
-import { IconNames, IconProps } from "@components/Icon/Icon";
+import { IconNames, IconProps } from '@components/Icon/Icon';
 
 interface PickerItem {
   label: string;
@@ -30,7 +30,7 @@ interface ListingItem {
     longitude: number;
   };
   views: number;
-  status: "approved" | "rejected" | "pending";
+  status: 'approved' | 'rejected' | 'pending';
   rejectionReason: string;
   updatedAt: Date;
 }
@@ -54,16 +54,16 @@ interface User {
   surname: string;
   favorites: string[];
   isBanned: boolean;
-  role: 'user' | 'admin'
+  role: 'user' | 'admin';
+  id: string;
+  privacyPolicyAccepted: boolean;
 }
 
 type LocationState = {
   cities: PickerItem[];
   districts: PickerItem[];
-  neighborhoods: PickerItem[];
   selectedCity: PickerItem | null;
   selectedDistrict: PickerItem | null;
-  selectedNeighborhood: PickerItem | null;
 };
 
 interface Filter {
@@ -77,12 +77,12 @@ interface IconType {
   name: string;
   color?: string;
   size?: number;
-};
+}
 
 interface OnBoardingSlide {
   id: number;
   title: string;
-  subTitle: string; 
+  subTitle: string;
   buttonText: string;
   icon: IconType;
 }

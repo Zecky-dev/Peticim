@@ -62,13 +62,6 @@ const OnBoarding = ({ onComplete }: OnBoardingProps) => {
           buttonPositive: 'İzin Ver',
         },
       );
-
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('Konum izni verildi.')  
-      } 
-      else {
-        console.log('Konum izni reddedildi');
-      }
       nextSlide();
     } catch (err) {
       console.warn('Konum izni hatası:', err);
@@ -104,10 +97,9 @@ const OnBoarding = ({ onComplete }: OnBoardingProps) => {
   const completeOnboarding = async () => {
     try {
       await AsyncStorage.setItem('@onboarding_completed', 'true');
-      console.log('Onboarding tamamlandı');
-      onComplete();
     } catch (error) {
-      console.error('Onboarding tamamlanma durumu kaydedilemedi:', error);
+      console.error('COMPLETE_ONBOARDING_ERROR', error);
+    } finally {
       onComplete();
     }
   };

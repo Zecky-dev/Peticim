@@ -220,7 +220,6 @@ const AddAdoption = () => {
       geohash: address?.geohash ?? '',
       status: 'pending',
     };
-
     const createListingSuccess = await createListing(
       listingData,
       photos,
@@ -252,25 +251,8 @@ const AddAdoption = () => {
         maxWidth: 800,
       });
       if (!pickedImages || pickedImages.length === 0) return;
-
-      // Tüm fotoğrafları sınıflandır
-      const results = await classifyAnimal(pickedImages);
-      if (results) {
-        const validImages = pickedImages.filter(
-          (_, index) => results[index].isAnimal,
-        );
-        const nonAnimalCount = pickedImages.length - validImages.length;
-
-        if (nonAnimalCount > 0) {
-          showToast({
-            type: 'error',
-            text1: 'Hata',
-            text2: `Sadece hayvan fotoğrafları yükleyebilirsiniz. ${nonAnimalCount} fotoğraf reddedildi.`,
-          });
-        }
-        formik.setFieldValue('photos', validImages);
-        setImages(validImages);
-      }
+      formik.setFieldValue('photos', pickedImages);
+      setImages(pickedImages);
     } catch (err: any) {
       showToast({
         type: 'error',

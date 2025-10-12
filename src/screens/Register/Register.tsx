@@ -104,6 +104,7 @@ const Register = () => {
                 email: values.email,
                 role: 'user',
                 isBanned: false,
+                privacyPolicyAccepted: false,
               };
               await handleRegister(values.email, values.password, otherData);
               setSubmitting(false);

@@ -7,14 +7,11 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
-  Pressable,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+// MapView'den Circle'ı içe aktarın
+import MapView, { Circle } from 'react-native-maps';
 import Modal from 'react-native-modal';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './AdoptionDetails.style';
 import Swiper from 'react-native-swiper';
 import colors from '@utils/colors';
@@ -28,9 +25,10 @@ import { CircleButton, Button, Icon, ChipCard, Input } from '@components';
 import { useUserDetails } from '@hooks/useUserDetails';
 import { useAuth } from '@context/AuthContext';
 import { incrementListingView } from '@api/listing';
-import { deleteListing, toggleFavorite } from '@firebase/listingService';
+import { deleteListing, reportListing, toggleFavorite } from '@firebase/listingService';
 import { useLoading } from '@context/LoadingContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { showToast } from '@config/toastConfig';
 
 const AdoptionDetails = () => {
   const route =
@@ -41,9 +39,7 @@ const AdoptionDetails = () => {
       NativeStackNavigationProp<AdoptionStackParamList, 'AdoptionDetails'>
     >();
 
-  const { user } = useAuth();
-
-  const { userDetails: currentUserDetails } = useUserDetails(user?.uid || null);
+  const { user, userDetails: currentUserDetails } = useAuth();
   const { userDetails: listingOwnerUserDetails } = useUserDetails(data.userId);
 
   const { showLoading, hideLoading } = useLoading();
@@ -51,10 +47,7 @@ const AdoptionDetails = () => {
   const [visibleFullScreenImage, setVisibleFullScreenImage] = useState(false);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
-  const [report, setReport] = useState<{
-    selectedReason: string;
-    reasonText?: string;
-  }>({
+  const [report, setReport] = useState({
     selectedReason: '',
     reasonText: '',
   });
@@ -65,7 +58,6 @@ const AdoptionDetails = () => {
     }
   }, [currentUserDetails, data.id]);
 
-  // Görüntülenme sayısını artır
   useEffect(() => {
     const handleViewIncrement = async () => {
       try {
@@ -81,7 +73,6 @@ const AdoptionDetails = () => {
     }
   }, [data.id, user?.uid]);
 
-  // WhatsApp mesajı gönder
   const sendWhatsappMessage = () => {
     const phoneNumber = data.phone;
     const message = `Merhaba ${listingOwnerUserDetails?.name}, Peticim'den gördüğüm "${data.title}" isimli ilanınız ile ilgileniyorum.`;
@@ -105,7 +96,6 @@ const AdoptionDetails = () => {
     });
   };
 
-  // İlanı kaldır.
   const handleDeleteListing = (listingId: string) => {
     Alert.alert(
       'İlanı Sil',
@@ -119,11 +109,9 @@ const AdoptionDetails = () => {
           text: 'Evet',
           style: 'destructive',
           onPress: async () => {
-            console.log('LISTING_ID', listingId);
-            console.log('USER_ID', user?.uid);
             try {
               showLoading();
-              await deleteListing(listingId, user?.uid);
+              await deleteListing(listingId, currentUserDetails?.id);
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
@@ -167,10 +155,37 @@ const AdoptionDetails = () => {
     { id: 4, text: 'Diğer' },
   ];
 
+  const sendReport = async () => {
+    if (report.selectedReason) {
+      const isOtherReason = report.selectedReason === 'Diğer';
+      if (isOtherReason) {
+        if (report.reasonText?.trim() !== '') {
+          await reportListing(report, data.id, user?.uid);
+          setReportModalVisible(false);
+        } else {
+          showToast({
+            type: 'error',
+            text1: 'Başarısız',
+            text2: 'Diğer başlığı için bir sebep belirtmelisiniz.',
+          });
+        }
+      } else {
+        await reportListing(report, data.id, user?.uid);
+        setReportModalVisible(false);
+      }
+    } else {
+      showToast({
+        type: 'error',
+        text1: 'Başarısız',
+        text2: 'Raporlamak için bir sebep seçmelisiniz.',
+        duration: 'medium',
+      });
+    }
+  };
+
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <ScrollView>
-        {/* Fotoğraflar slider */}
         <View style={styles.imageSwiperContainer}>
           <Swiper
             horizontal
@@ -276,8 +291,8 @@ const AdoptionDetails = () => {
             initialRegion={{
               latitude: data.address.latitude,
               longitude: data.address.longitude,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
             }}
             zoomEnabled={false}
             pitchEnabled={false}
@@ -285,11 +300,16 @@ const AdoptionDetails = () => {
             scrollEnabled={false}
             style={{ width: '100%', height: 120, marginTop: 12 }}
           >
-            <Marker
-              coordinate={{
+            {/* Tam konum yerine daire çiziyoruz */}
+            <Circle
+              center={{
                 latitude: data.address.latitude,
                 longitude: data.address.longitude,
               }}
+              radius={300} // Metre cinsinden yarıçap
+              strokeWidth={2}
+              strokeColor={colors.primary}
+              fillColor="rgba(255, 107, 107, 0.4)"
             />
           </MapView>
 
@@ -431,6 +451,10 @@ const AdoptionDetails = () => {
           </View>
 
           <Input
+            onChangeText={reasonText =>
+              setReport(report => ({ ...report, reasonText }))
+            }
+            value={report.reasonText}
             placeholder="İletmek istediğiniz mesajınız.."
             customStyles={{
               input: {
@@ -441,8 +465,7 @@ const AdoptionDetails = () => {
             showCharacterCount={true}
             maxLength={120}
           />
-
-          <Button label="Raporla" onPress={() => console.log('Rapor')} />
+          <Button label="Raporla" onPress={sendReport} />
         </View>
       </Modal>
     </SafeAreaView>

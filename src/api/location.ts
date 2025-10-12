@@ -5,6 +5,7 @@ export const getCities = async () => {
     const res = await axiosClient.get('/location/cities');
     return res.data;
   } catch (error: any) {
+    console.log('GET_CITIES_ERROR', error.response.data);
     console.error('GET_CITIES_ERROR', error);
   }
 };

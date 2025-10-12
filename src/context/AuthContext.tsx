@@ -1,16 +1,17 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { onAuthStateChanged, signOut } from '@react-native-firebase/auth';
-import { sendPasswordResetEmail } from '@api/auth';
-import { useLoading } from './LoadingContext';
 import { auth, db } from '@firebase/firebase';
+import { doc, onSnapshot } from '@react-native-firebase/firestore';
+import { useLoading } from './LoadingContext';
+import { User } from 'types/global';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   googleSignIn,
   resetPassword,
   signInUser,
   signUpUser,
 } from '@firebase/authService';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -18,6 +19,8 @@ interface AuthProviderProps {
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
+  userDetails: User | null;
+  requiresPrivacyPolicyAcceptance: boolean;
   initializing: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, otherData: any) => Promise<void>;
@@ -30,25 +33,55 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  const [userDetails, setUserDetails] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [requiresPrivacyPolicyAcceptance, setRequiresPrivacyPolicyAcceptance] =
+    useState(false);
   const { showLoading, hideLoading } = useLoading();
 
-  async function onAuthStateChangedCallback(
-    user: FirebaseAuthTypes.User | null,
-  ) {
-    if (user && user.emailVerified) {
-      setUser(user);
-    } else {
-      setUser(null);
-    }
-    if (initializing) setInitializing(false);
-  }
-
+  // 🔹 Auth değişimlerini dinle
   useEffect(() => {
-    const subscriber = onAuthStateChanged(auth, onAuthStateChangedCallback);
+    const subscriber = onAuthStateChanged(auth, u => {
+      if (u && u.emailVerified) setUser(u);
+      else setUser(null);
+      if (initializing) setInitializing(false);
+    });
     return subscriber;
   }, []);
 
+  // 🔹 Firestore’daki kullanıcı detaylarını realtime olarak dinle
+  useEffect(() => {
+    if (!user?.uid) {
+      setUserDetails(null);
+      setRequiresPrivacyPolicyAcceptance(false);
+      return;
+    }
+
+    const userRef = doc(db, 'Users', user.uid);
+
+    const unsubscribe = onSnapshot(
+      userRef,
+      snap => {
+        if (snap.exists()) {
+          const data = snap.data() as User;
+          setUserDetails({ ...data, id: snap.id });
+          const accepted = data.privacyPolicyAccepted === true;
+          setRequiresPrivacyPolicyAcceptance(!accepted);
+        } else {
+          setUserDetails(null);
+          setRequiresPrivacyPolicyAcceptance(false);
+        }
+      },
+      err => {
+        console.error('AuthProvider userDetails error:', err);
+        setRequiresPrivacyPolicyAcceptance(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  // 🔹 Auth işlemleri
   const login = async (email: string, password: string) => {
     try {
       showLoading();
@@ -76,6 +109,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       } catch (_) {}
       await signOut(auth);
       setUser(null);
+      setUserDetails(null);
     } finally {
       hideLoading();
     }
@@ -103,12 +137,14 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value: AuthContextType = {
     user,
+    userDetails,
     initializing,
     login,
     register,
     logout,
     passwordReset,
     googleLogin,
+    requiresPrivacyPolicyAcceptance,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

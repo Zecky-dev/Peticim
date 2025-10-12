@@ -6,8 +6,6 @@ import styles from './AuthMethodChoice.style';
 import colors from '@utils/colors';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-import { googleSignIn } from '@firebase/authService';
 import { useAuth } from '@context/AuthContext';
 
 const AuthMethodChoice = () => {

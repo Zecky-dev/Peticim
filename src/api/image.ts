@@ -33,31 +33,6 @@ const uploadImages = async (
   }
 };
 
-const classifyAnimal = async (images: any[]) => {
-  const token = await getValidToken();
-  if (!token || !images) return;
-  try {
-    const formData = new FormData();
-    images.forEach((image, index) => {
-      formData.append('files', {
-        uri: image.uri,
-        type: image.type || 'image/jpeg',
-        name: image.fileName || `photo_${index}.jpg`,
-      } as any);
-    });
-    const res = await axiosClient.post('/image/classifyAnimal', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return res.data.results || null;
-  } catch (error: any) {
-    console.error('CLASSIFY_ANIMAL_ERROR', error);
-    return null;
-  }
-};
-
 const deleteImages = async (userId: string, listingId: string) => {
   const token = await getValidToken();
   if (!userId || !listingId) return;
@@ -76,4 +51,4 @@ const deleteImages = async (userId: string, listingId: string) => {
   }
 };
 
-export { uploadImages, classifyAnimal, deleteImages };
+export { uploadImages, deleteImages };

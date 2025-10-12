@@ -19,6 +19,7 @@ import {
   documentId,
   startAt,
   endAt,
+  addDoc,
 } from '@react-native-firebase/firestore';
 import { uploadImages, deleteImages } from '@api/image';
 import { showToast } from '@config/toastConfig';
@@ -28,6 +29,7 @@ import { Filter } from 'types/global';
 const listingsCollection = collection(db, 'Listings');
 let lastVisible: FirebaseFirestoreTypes.QueryDocumentSnapshot | null = null;
 
+// 🔹 Filtre uygulama yardımcı fonksiyonu
 const applyFilters = (
   q: any,
   filters?: Filter[],
@@ -44,6 +46,7 @@ const applyFilters = (
   return q;
 };
 
+// 🔹 İlan oluşturma
 export const createListing = async (
   listingData: any,
   images: any[],
@@ -72,70 +75,40 @@ export const createListing = async (
   }
 };
 
-export const getFirstListings = async (
+// 🔹 Tek fonksiyonla sayfalama yönetimi
+export const getListings = async (
   filters: Filter[] = [],
   onlyApproved: boolean = true,
+  startAfterDoc: any = null,
+  pageSize: number = 10,
 ) => {
-  try {
-    let q = query(listingsCollection, orderBy('createdAt', 'desc'), limit(10));
-    q = applyFilters(q, filters, onlyApproved);
-    const documentSnapshots = await getDocs(q);
-    if (documentSnapshots.empty) {
-      lastVisible = null;
-      return [];
-    }
-    lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    const listings = documentSnapshots.docs.map(
-      (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
-        id: doc.id,
-        ...doc.data(),
-      }),
-    );
-    return listings;
-  } catch (error) {
-    console.error('GET_FIRST_LISTINGS_ERROR', error);
-    return [];
-  }
-};
-
-export const getNextListings = async (
-  filters: Filter[] = [],
-  onlyApproved: boolean = true,
-) => {
-  if (!lastVisible) return [];
   try {
     let q = query(
       listingsCollection,
       orderBy('createdAt', 'desc'),
-      startAfter(lastVisible),
-      limit(10),
+      limit(pageSize),
     );
     q = applyFilters(q, filters, onlyApproved);
-
-    const documentSnapshots = await getDocs(q);
-    if (documentSnapshots.empty) {
-      lastVisible = null;
-      return [];
+    if (startAfterDoc) {
+      q = query(q, startAfter(startAfterDoc));
     }
-    lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    return documentSnapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      return { listings: [], lastDoc: null };
+    }
+    const listings = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+    return { listings, lastDoc };
   } catch (error) {
-    console.error('GET_NEXT_LISTING_ERROR', error);
-    return [];
+    console.error('GET_LISTINGS_ERROR', error);
+    return { listings: [], lastDoc: null };
   }
 };
 
-export const deleteListing = async (listingId: string, userId?: string) => {
-  if (!listingId || !userId) return;
-  try {
-    const docRef = doc(db, 'Listings', listingId);
-    await deleteImages(userId, listingId);
-    await deleteDoc(docRef);
-  } catch (error: any) {
-    console.error('DELETE_LISTING_ERROR', error);
-  }
-};
-
+// 🔹 Favori ekleme / çıkarma
 export const toggleFavorite = async (listingId?: string, userId?: string) => {
   if (!listingId || !userId) {
     showToast({
@@ -156,13 +129,12 @@ export const toggleFavorite = async (listingId?: string, userId?: string) => {
         await updateDoc(userRef, {
           favorites: arrayRemove(listingId),
         });
-        return true;
       } else {
         await updateDoc(userRef, {
           favorites: arrayUnion(listingId),
         });
-        return true;
       }
+      return true;
     } else {
       return false;
     }
@@ -177,6 +149,7 @@ export const toggleFavorite = async (listingId?: string, userId?: string) => {
   }
 };
 
+// 🔹 Belirli ilanları ID ile getir
 export const getListingsByIds = async (listingIds: string[]) => {
   if (!listingIds || listingIds.length === 0) return [];
 
@@ -196,16 +169,13 @@ export const getListingsByIds = async (listingIds: string[]) => {
       );
 
       const documentSnapshots = await getDocs(q);
-
       const listings = documentSnapshots.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
-
       allListings.push(...listings);
     }
 
-    // JS tarafında sıralama
     return allListings.sort(
       (a, b) => b.createdAt.toMillis() - a.createdAt.toMillis(),
     );
@@ -215,7 +185,7 @@ export const getListingsByIds = async (listingIds: string[]) => {
   }
 };
 
-// Yakındaki ilanları almak için..
+// 🔹 Yakındaki ilanları getir
 export const getNearbyListings = async (
   center: { latitude: number; longitude: number },
   radius: number,
@@ -245,17 +215,14 @@ export const getNearbyListings = async (
       for (const doc of snap.docs) {
         const lat = doc.get('address.latitude');
         const lng = doc.get('address.longitude');
-
         const distanceInKm = geofire.distanceBetween(
           [lat, lng],
           [center.latitude, center.longitude],
         );
         const distanceInM = distanceInKm * 1000;
-
         const approveStatus = doc.get('status');
-
         if (distanceInM <= radiusInM) {
-          if (approveStatus !== "approved") continue;
+          if (approveStatus !== 'approved') continue;
           matchingDocs.push({
             id: doc.id,
             ...doc.data(),
@@ -271,6 +238,59 @@ export const getNearbyListings = async (
   }
 };
 
+export const deleteListing = async (listingId?: string, userId?: string) => {
+  if (!listingId || !userId) return;
+  try {
+    const docRef = doc(db, 'Listings', listingId);
+    await deleteImages(userId, listingId);
+    await deleteDoc(docRef);
+  } catch (error: any) {
+    console.error('DELETE_LISTING_ERROR', error);
+  }
+};
+
+export const reportListing = async (
+  report: { selectedReason: string; reasonText: string },
+  listingId?: string,
+  userId?: string,
+) => {
+  if (!report || !listingId || !userId) return;
+
+  try {
+    const listingReportDocRef = doc(db, 'ListingReports', listingId);
+    await setDoc(
+      listingReportDocRef,
+      {
+        createdAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+    const reportsCollectionRef = collection(listingReportDocRef, 'reports');
+    await addDoc(reportsCollectionRef, {
+      userId: userId,
+      selectedReason: report.selectedReason || 'Neden belirtilmemiş',
+      reasonText: report.reasonText || '',
+      createdAt: serverTimestamp(),
+    });
+    showToast({
+      type: 'success',
+      text1: 'Başarılı',
+      text2: 'Raporunuz başarıyla iletildi, en yakın sürede incelenecektir.',
+      duration: 'medium',
+    })
+    console.log('Rapor başarıyla gönderildi!');
+  } catch (error) {
+    console.error('Rapor gönderilirken hata oluştu:', error);
+    showToast({
+      type: 'error',
+      text1: 'Hata',
+      text2: 'Rapor gönderilirken bir hata meydana geldi, tekrar deneyiniz.',
+      duration: 'medium',
+    })
+  }
+};
+
+// 🔹 Sayfalama resetleme
 export const resetPagination = () => {
   lastVisible = null;
 };

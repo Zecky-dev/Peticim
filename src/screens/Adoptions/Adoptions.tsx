@@ -22,15 +22,12 @@ import {
   Picker,
 } from '@components';
 
-import { AD_BANNER_UNIT_ID } from '@env';
 import {
   BannerAd,
   BannerAdSize,
-  TestIds,
 } from 'react-native-google-mobile-ads';
 
 import { useListings } from '@hooks/useListings';
-import { useUserDetails } from '@hooks/useUserDetails';
 import { useAuth } from '@context/AuthContext';
 
 import Modal from 'react-native-modal';
@@ -44,10 +41,7 @@ import styles from './Adoptions.style';
 import animalFilters from '../../constants/animalFilters.json';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { isEqual } from '@utils/basicValidations';
-import { PickerItem } from 'types/global';
-import { Filter } from 'react-native-svg';
-
-const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : AD_BANNER_UNIT_ID;
+import { LocationState, PickerItem, Filter } from 'types/global';
 
 const Adoptions = () => {
   const route = useRoute<RouteProp<AdoptionStackParamList, 'Adoptions'>>();
@@ -55,8 +49,7 @@ const Adoptions = () => {
     useNavigation<
       NativeStackNavigationProp<AdoptionStackParamList, 'Adoptions'>
     >();
-  const { user } = useAuth();
-  const { userDetails } = useUserDetails(user?.uid || null);
+  const { userDetails } = useAuth();
 
   const [filters, setFilters] = useState<Filter[]>([]);
   const [tempFilters, setTempFilters] = useState<Filter[]>([]);
@@ -71,10 +64,8 @@ const Adoptions = () => {
   const [location, setLocation] = useState<LocationState>({
     cities: [],
     districts: [],
-    neighborhoods: [],
     selectedCity: null,
     selectedDistrict: null,
-    selectedNeighborhood: null,
   });
 
   const handleCitySelect = async (city: PickerItem) => {
@@ -104,7 +95,9 @@ const Adoptions = () => {
   };
   const handleDistrictSelect = async (district: PickerItem) => {
     setTempFilters((prev: any) => {
-      const withoutDistrict = prev.filter(f => f.field !== 'address.district');
+      const withoutDistrict = prev.filter(
+        (f: Filter) => f.field !== 'address.district',
+      );
       return [
         ...withoutDistrict,
         { field: 'address.district', operator: '==', value: district.label },
@@ -130,7 +123,7 @@ const Adoptions = () => {
   }, []);
 
   const { listings, loadInitialListings, loadMoreListings, favoriteListings } =
-    useListings(filters, showFavorites);
+    useListings(showFavorites);
 
   const renderItem = ({ item }: { item: any }) => {
     if (item.isAd) {
@@ -156,7 +149,7 @@ const Adoptions = () => {
   useFocusEffect(
     useCallback(() => {
       if (route.params?.shouldRefresh) {
-        loadInitialListings().then(() => {
+        loadInitialListings([], true, true).then(() => {
           flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
         });
         navigation.setParams({ shouldRefresh: false });
@@ -292,12 +285,16 @@ const Adoptions = () => {
         onRefresh={() => {
           setIsRefreshing(true);
           resetPagination();
-          loadInitialListings(filters).finally(() => setIsRefreshing(false));
+          loadInitialListings(filters, true, true).finally(() =>
+            setIsRefreshing(false),
+          );
         }}
         ListEmptyComponent={() => {
           return (
             <EmptyList
-              label={showFavorites ? "Favori ilanın bulunamadı" : "İlan bulunamadı"}
+              label={
+                showFavorites ? 'Favori ilanın bulunamadı' : 'İlan bulunamadı'
+              }
               image={
                 <LottieView
                   autoPlay={true}

@@ -78,7 +78,10 @@ export const signInUser = async (email: string, password: string) => {
       });
       return false;
     }
-    getFcmTokenService().then(async token => updateFCMToken(user, token));
+    getFcmTokenService().then(async token => {
+      console.log('FCM_TOKEN', token);
+      updateFCMToken(user, token)
+    });
     return true;
   } catch (error: any) {
     console.error('SIGN_IN_USER_ERROR', error);
@@ -118,6 +121,27 @@ export const updateFCMToken = async (
   }
 };
 
+export const acceptPrivacyPolicy = async (userId: string) => {
+  if (!userId) {
+    console.error('acceptPrivacyPolicy: userId is missing');
+    return;
+  }
+  try {
+    const userDocRef = doc(db, 'Users', userId);
+    await updateDoc(userDocRef, {
+      privacyPolicyAccepted: true,
+      privacyPolicyAcceptedAt: serverTimestamp(),
+    });
+  } catch (error: any) {
+    console.error('acceptPrivacyPolicy error:', error);
+    showToast({
+      type: 'error',
+      text1: 'Hata',
+      text2: 'Gizlilik sözleşmesini kabul ederken bir hata oluştu.',
+    });
+  }
+};
+
 export const googleSignIn = async () => {
   try {
     await GoogleSignin.hasPlayServices();
@@ -145,6 +169,7 @@ export const googleSignIn = async () => {
         createDate: serverTimestamp(),
         role: 'user',
         fcmToken,
+        privacyPolicyAccepted: false,
       });
     } else {
       await setDoc(

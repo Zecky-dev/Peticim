@@ -27,6 +27,7 @@ import {
   NearAdoptions,
   OnBoarding,
   AuthMethodChoice,
+  PrivacyPolicy,
 } from '@screens';
 import { HeaderLogo, Icon } from '@components';
 
@@ -197,15 +198,30 @@ function AppStack() {
             }
             return { backgroundColor: colors.primary };
           })(),
-          popToTopOnBlur: true,
+          unmountOnBlur: false,
+        })}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();            
+            navigation.navigate('ProfileStack', {
+              screen: 'Profile',
+            });
+          },
         })}
       />
     </Tab.Navigator>
   );
 }
 
+// 🆕 Gizlilik Sözleşmesi ekranı için Stack Navigator'ı tanımlayın
+const PrivacyPolicyStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicy} />
+  </Stack.Navigator>
+);
+
 const RootNavigator = () => {
-  const { user, initializing } = useAuth();
+  const { user, requiresPrivacyPolicyAcceptance } = useAuth();
   const [isOnboardingCompleted, setIsOnboardingCompleted] = React.useState<
     boolean | null
   >(null);
@@ -235,7 +251,8 @@ const RootNavigator = () => {
     }
   };
 
-  if (initializing || isOnboardingCompleted === null) {
+  // 1️⃣ Loading ekranı sadece initial auth check için
+  if (user === undefined || isOnboardingCompleted === null) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -243,6 +260,7 @@ const RootNavigator = () => {
     );
   }
 
+  // 2️⃣ Onboarding ekranı
   if (!isOnboardingCompleted) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -252,10 +270,22 @@ const RootNavigator = () => {
       </Stack.Navigator>
     );
   }
-  return user ? <AppStack /> : <AuthStack />;
+
+  // 3️⃣ Login ekranları
+  if (!user) {
+    return <AuthStack />;
+  }
+
+  // 4️⃣ Gizlilik sözleşmesi ekranı
+  if (requiresPrivacyPolicyAcceptance) {
+    return <PrivacyPolicyStack />;
+  }
+
+  // 5️⃣ Ana uygulama
+  return <AppStack />;
 };
 
-const AppContent = ({ navigationRef, onNavigationReady }) => {
+const AppContent = ({ navigationRef, onNavigationReady }: { navigationRef: any; onNavigationReady: () => void }) => {
   const insets = useSafeAreaInsets();
   return (
     <>

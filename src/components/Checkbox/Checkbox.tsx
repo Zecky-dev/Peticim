@@ -8,16 +8,19 @@ type CheckboxProps = {
   label: string;
   checked: boolean;
   onCheckChange: (newValue: boolean) => void;
+  labelColor?: string; // opsiyonel prop eklendi
 };
 
-const Checkbox = ({ label, checked, onCheckChange }: CheckboxProps) => {
+const Checkbox = ({
+  label,
+  checked,
+  onCheckChange,
+  labelColor,
+}: CheckboxProps) => {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() => {
-        const newValue = !checked;
-        onCheckChange(newValue);
-      }}
+      onPress={() => onCheckChange(!checked)}
       style={styles.container}
     >
       <View style={styles.checkboxButton}>
@@ -25,7 +28,9 @@ const Checkbox = ({ label, checked, onCheckChange }: CheckboxProps) => {
           <Icon name="checkmark" type="ion" color={colors.primary} size={12} />
         )}
       </View>
-      <Text style={styles.checkboxLabel}>{label}</Text>
+      <Text style={[styles.checkboxLabel, { color: labelColor || '#000' }]}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 };

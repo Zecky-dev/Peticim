@@ -24,6 +24,8 @@ export const getBaseURL = () => {
   }
 };
 
+console.log('BASE_URL', getBaseURL());
+
 const axiosClient = axios.create({
   baseURL: getBaseURL(),
   timeout: 60000,
@@ -36,13 +38,12 @@ axiosClient.interceptors.response.use(
   response => response,
   error => {
     if (error.response) {
-      console.log('Hata Durum Kodu:', error.response.status);
-      console.log('Hata Verisi:', error.response.data);
-      console.log('Hata Başlıkları:', error.response.headers);
+      console.log('ERROR_STATUS_CODE: ', error.response.status);
+      console.log('ERROR_STATUS_DATA: ', error.response.data);
     } else if (error.request) {
-      console.log('Yanıt Alınamadı:', error.request);
+      console.log('ERROR_NO_RESPONSE: ', error.request);
     } else {
-      console.log('Hata:', error.message);
+      console.log('ERROR: ', error.message);
     }
     return Promise.reject(error);
   },

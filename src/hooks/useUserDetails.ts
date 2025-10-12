@@ -3,6 +3,7 @@ import { doc, onSnapshot } from '@react-native-firebase/firestore';
 import { db } from '@firebase/firebase';
 import { useLoading } from '@context/LoadingContext';
 import { useAuth } from '@context/AuthContext';
+import { User } from 'types/global';
 
 export function useUserDetails(userId: string | null) {
   const { showLoading, hideLoading } = useLoading();

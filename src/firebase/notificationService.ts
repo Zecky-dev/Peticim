@@ -11,7 +11,7 @@ import notifee, {
   Event,
   EventType,
 } from '@notifee/react-native';
-import { NavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainerRef, CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Notification action types (dış servisten gelen data'ya göre)
@@ -57,28 +57,55 @@ const handleNotificationAction = (notificationData: any) => {
   switch (actionType) {
     case 'listing_approved':
     case 'LISTING_APPROVED':
-      console.log('Navigating to Adoptions with refresh');
-      navigationRef.navigate('AdoptionStacks', {
-        screen: 'Adoptions',
-        params: { shouldRefresh: true }
-      });
+      console.log('Navigating to Adoptions with refresh (listing approved)');
+      navigationRef.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'AdoptionStacks',
+              state: {
+                routes: [{ name: 'Adoptions', params: { shouldRefresh: true } }],
+              },
+            },
+          ],
+        })
+      );
       break;
 
     case 'listing_rejected':
     case 'LISTING_REJECTED':
-      console.log('Navigating to MyAdoptionListings with refresh');
-      navigationRef.navigate('ProfileStack', {
-        screen: 'MyAdoptionListings',
-        params: { shouldRefresh: true }
-      });
+      console.log('Navigating to Adoptions with refresh (listing rejected)');
+      navigationRef.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'AdoptionStacks',
+              state: {
+                routes: [{ name: 'Adoptions', params: { shouldRefresh: true } }],
+              },
+            },
+          ],
+        })
+      );
       break;
 
     default:
-      console.log('Navigating to Adoptions (default)');
-      navigationRef.navigate('AdoptionStacks', {
-        screen: 'Adoptions',
-        params: { shouldRefreshrefresh: true }
-      });
+      console.log('Navigating to Adoptions with refresh (default)');
+      navigationRef.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'AdoptionStacks',
+              state: {
+                routes: [{ name: 'Adoptions', params: { shouldRefresh: true } }],
+              },
+            },
+          ],
+        })
+      );
       break;
   }
 };

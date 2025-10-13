@@ -291,8 +291,8 @@ const AdoptionDetails = () => {
             initialRegion={{
               latitude: data.address.latitude,
               longitude: data.address.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
+              latitudeDelta: 0.015,
+              longitudeDelta: 0.015,
             }}
             zoomEnabled={false}
             pitchEnabled={false}

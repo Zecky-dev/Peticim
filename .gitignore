@@ -104,3 +104,5 @@ android/captures/
 # Package manager
 package-lock.json
 yarn.lock
+
+sentry.properties

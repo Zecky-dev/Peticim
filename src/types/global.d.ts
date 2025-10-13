@@ -5,7 +5,7 @@ interface PickerItem {
   value: string;
 }
 
-interface ListingItem {
+export interface ListingItem {
   id: string;
   animalBreed: string;
   animalType: string;

@@ -5,18 +5,18 @@ import Icon from '@components/Icon';
 
 interface CircleButtonProps {
   onPress?: () => void;
-  iconName?: string; // gösterilecek ikon
+  iconName?: string;
   iconType?: string;
   iconColor?: string;
   iconSize?: number;
-  size?: number; // buton boyutu
+  size?: number;
   backgroundColor?: string;
-  style?: ViewStyle; // ekstra stil eklemek için
+  style?: ViewStyle;
 }
 
 const CircleButton = ({
   onPress,
-  iconName = 'chevron-left', // varsayılan ikon
+  iconName = 'chevron-left',
   iconType = 'feather',
   iconColor = colors.primary,
   iconSize = 32,
@@ -25,7 +25,7 @@ const CircleButton = ({
   style,
 }: CircleButtonProps) => {
   const navigation = useNavigation();
-  const buttonSize = size || iconSize + 16; // otomatik boyut
+  const buttonSize = size || iconSize + 16;
 
   // onPress yoksa varsayılan geri fonksiyon
   const handlePress = onPress ?? (() => navigation.goBack());
@@ -47,7 +47,12 @@ const CircleButton = ({
       onPress={handlePress}
     >
       {iconName && (
-        <Icon name={iconName} type={iconType} color={iconColor} size={iconSize} />
+        <Icon
+          name={iconName}
+          type={iconType}
+          color={iconColor}
+          size={iconSize}
+        />
       )}
     </TouchableOpacity>
   );

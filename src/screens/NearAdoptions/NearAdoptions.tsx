@@ -6,8 +6,6 @@ import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
 import MapView, { Callout, Circle, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Icon } from '@components';
-import { WebView } from 'react-native-webview';
-import { Svg, Image as ImageSvg } from 'react-native-svg';
 
 import styles from './NearAdoptions.style';
 import colors from '@utils/colors';
@@ -74,6 +72,7 @@ const NearAdoptions = () => {
             latitudeDelta: 0.1,
             longitudeDelta: 0.1,
           }}
+          toolbarEnabled={false}
           showsUserLocation={true}
         >
           <Circle
@@ -81,7 +80,7 @@ const NearAdoptions = () => {
             radius={5000}
             strokeWidth={2}
             strokeColor="#FFFFFF"
-            fillColor="rgba(255,255,255,0.2)"
+          fillColor="rgba(121, 22, 218, 0.2)"
           />
           {nearbyListings.map(l => (
             <Marker

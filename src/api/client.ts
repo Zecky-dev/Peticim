@@ -7,6 +7,7 @@ import {
   ANDROID_PHYSICAL_DEV_URL,
   API_URL,
 } from '@env';
+import * as Sentry from '@sentry/react-native';
 
 export const getBaseURL = () => {
   const OS = Platform.OS;
@@ -23,8 +24,6 @@ export const getBaseURL = () => {
     return API_URL;
   }
 };
-
-console.log('BASE_URL', getBaseURL());
 
 const axiosClient = axios.create({
   baseURL: getBaseURL(),
@@ -45,6 +44,7 @@ axiosClient.interceptors.response.use(
     } else {
       console.log('ERROR: ', error.message);
     }
+    Sentry.captureException(error);
     return Promise.reject(error);
   },
 );

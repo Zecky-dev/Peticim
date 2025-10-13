@@ -44,8 +44,6 @@ const Input = ({
 }: InputProps) => {
   const [hidden, setHidden] = useState(secureContent);
   const [textValue, setTextValue] = useState(value || '');
-
-  // Eğer parent value değişirse state'i güncelle
   useEffect(() => {
     setTextValue(value || '');
   }, [value]);
@@ -61,7 +59,9 @@ const Input = ({
 
   return (
     <View style={[styles.outerContainer, customStyles?.outerContainer]}>
-      {label && <Text style={[styles.label, customStyles?.label]}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, customStyles?.label]}>{label}</Text>
+      )}
 
       <View style={[styles.inputContainer, customStyles?.inputContainer]}>
         <TextInput
@@ -71,8 +71,8 @@ const Input = ({
           placeholderTextColor={colors.gray}
           maxLength={maxLength}
           value={textValue}
-          onChangeText={(text) => {
-            setTextValue(text); // karakter sayısını anlık güncelle
+          onChangeText={text => {
+            setTextValue(text);
             if (rest.onChangeText) rest.onChangeText(text);
           }}
           {...rest}
@@ -83,16 +83,17 @@ const Input = ({
             onPress={() => setHidden(!hidden)}
             style={styles.hideUnhideButton}
           >
-            <Icon name={hidden ? 'eye-off' : 'eye'} size={20} color={colors.gray} />
+            <Icon
+              name={hidden ? 'eye-off' : 'eye'}
+              size={20}
+              color={colors.gray}
+            />
           </TouchableOpacity>
         )}
 
         {maxLength && showCharacterCount && (
           <Text
-            style={[
-              styles.characterCounterText,
-              { color: getCounterColor() },
-            ]}
+            style={[styles.characterCounterText, { color: getCounterColor() }]}
           >
             {characterCount}/{maxLength}
           </Text>

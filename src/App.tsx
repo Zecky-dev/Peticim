@@ -30,6 +30,7 @@ import {
   PrivacyPolicy,
 } from '@screens';
 import { HeaderLogo, Icon } from '@components';
+import { SENTRY_DSN } from '@env';
 
 import LoadingProvider from '@context/LoadingContext';
 import AuthProvider, { useAuth } from '@context/AuthContext';
@@ -50,6 +51,17 @@ import styles from './App.style';
 import { auth } from '@firebase/firebase';
 import { updateFCMToken } from '@firebase/authService';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: SENTRY_DSN,
+  sendDefaultPii: false,
+  enableLogs: true,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration()],
+});
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -201,8 +213,8 @@ function AppStack() {
           unmountOnBlur: false,
         })}
         listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();            
+          tabPress: e => {
+            e.preventDefault();
             navigation.navigate('ProfileStack', {
               screen: 'Profile',
             });
@@ -285,7 +297,13 @@ const RootNavigator = () => {
   return <AppStack />;
 };
 
-const AppContent = ({ navigationRef, onNavigationReady }: { navigationRef: any; onNavigationReady: () => void }) => {
+const AppContent = ({
+  navigationRef,
+  onNavigationReady,
+}: {
+  navigationRef: any;
+  onNavigationReady: () => void;
+}) => {
   const insets = useSafeAreaInsets();
   return (
     <>
@@ -301,7 +319,7 @@ const AppContent = ({ navigationRef, onNavigationReady }: { navigationRef: any; 
   );
 };
 
-export default function App() {
+const App = () => {
   const navigationRef = useRef<any>(null);
 
   // INIT HELPER FUNCTIONS
@@ -355,3 +373,5 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+export default Sentry.wrap(App);

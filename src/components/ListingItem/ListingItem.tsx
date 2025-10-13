@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity} from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import styles from './ListingItem.style';
 import Icon from '@components/Icon';
 import colors from '@utils/colors';
@@ -11,9 +11,10 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { toggleFavorite } from '@firebase/listingService';
 import { useAuth } from '@context/AuthContext';
+import { ListingItem as ListingItemType } from '../../types/global';
 
 type ListingItemProps = {
-  data: ListingItem;
+  data: ListingItemType;
   favorited: boolean;
 };
 
@@ -23,8 +24,6 @@ const ListingItem = ({ data, favorited }: ListingItemProps) => {
       NativeStackNavigationProp<AdoptionStackParamList, 'AdoptionDetails'>
     >();
   const { user } = useAuth();
-
-
 
   // Formats date
   const formattedDate = () => {

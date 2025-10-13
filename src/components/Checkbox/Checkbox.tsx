@@ -8,7 +8,7 @@ type CheckboxProps = {
   label: string;
   checked: boolean;
   onCheckChange: (newValue: boolean) => void;
-  labelColor?: string; // opsiyonel prop eklendi
+  labelColor?: string;
 };
 
 const Checkbox = ({

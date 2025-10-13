@@ -8,7 +8,7 @@ type AlertType = 'info' | 'warning' | 'success' | 'error';
 type AlertProps = {
   message: string;
   type?: AlertType;
-  withIcon?: boolean; // Yeni eklenen prop
+  withIcon?: boolean;
 };
 
 const Alert = ({ message, type = 'error', withIcon = true }: AlertProps) => {
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 12,
-    fontFamily: 'Comfortaa-Bold'
+    fontFamily: 'Comfortaa-Bold',
   },
 });
 

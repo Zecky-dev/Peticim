@@ -22,18 +22,11 @@ import {
   Picker,
 } from '@components';
 
-import {
-  BannerAd,
-  BannerAdSize,
-} from 'react-native-google-mobile-ads';
-
 import { useListings } from '@hooks/useListings';
 import { useAuth } from '@context/AuthContext';
 
 import Modal from 'react-native-modal';
 import LottieView from 'lottie-react-native';
-
-import { resetPagination } from '@firebase/listingService';
 import { getCities, getDistricts } from '@api/location';
 
 import colors from '@utils/colors';
@@ -124,23 +117,6 @@ const Adoptions = () => {
 
   const { listings, loadInitialListings, loadMoreListings, favoriteListings } =
     useListings(showFavorites);
-
-  const renderItem = ({ item }: { item: any }) => {
-    if (item.isAd) {
-      return (
-        <BannerAd
-          unitId={adUnitId}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        />
-      );
-    }
-    return (
-      <ListingItem
-        data={item}
-        favorited={userDetails?.favorites?.includes(item.id) || false}
-      />
-    );
-  };
 
   useEffect(() => {
     loadInitialListings();
@@ -274,7 +250,12 @@ const Adoptions = () => {
             : styles.listingsContentContainer
         }
         data={showFavorites ? favoriteListings : listings}
-        renderItem={renderItem}
+        renderItem={({ item }) => (
+          <ListingItem
+            data={item}
+            favorited={userDetails?.favorites?.includes(item.id) || false}
+          />
+        )}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         keyExtractor={item => item.id.toString()}
@@ -284,7 +265,6 @@ const Adoptions = () => {
         refreshing={isRefreshing}
         onRefresh={() => {
           setIsRefreshing(true);
-          resetPagination();
           loadInitialListings(filters, true, true).finally(() =>
             setIsRefreshing(false),
           );

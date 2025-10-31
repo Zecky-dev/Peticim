@@ -1,19 +1,45 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Animated, View, Text, TouchableOpacity } from 'react-native';
 import { Icon } from '@components';
 import colors from '@utils/colors';
 import styles from './InformationBox.style';
+import { getItemFromAsyncStorage, saveItemToAsyncStorage } from '@utils/storage';
+
+const DISMISS_KEY = 'info_box_dismissed';
 
 const InformationBox = () => {
   const [visible, setVisible] = useState(true);
   const animation = useRef(new Animated.Value(1)).current;
 
-  const closeBox = () => {
+  // Uygulama açıldığında dismiss state'i kontrol et
+  useEffect(() => {
+    const checkDismissStatus = async () => {
+      try {
+        const isDismissed = await getItemFromAsyncStorage(DISMISS_KEY);
+        if (isDismissed === 'true') {
+          setVisible(false);
+        }
+      } catch (error) {
+        console.error('Error checking dismiss status:', error);
+      }
+    };
+    checkDismissStatus();
+  }, []);
+
+  const closeBox = async () => {
     Animated.timing(animation, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => setVisible(false));
+    }).start(async () => {
+      setVisible(false);
+      // Dismiss state'i AsyncStorage'a kaydet
+      try {
+        await saveItemToAsyncStorage(DISMISS_KEY, 'true');
+      } catch (error) {
+        console.error('Error saving dismiss status:', error);
+      }
+    });
   };
 
   if (!visible) return null;

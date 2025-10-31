@@ -17,14 +17,17 @@ export function useUserDetails(userId: string | null) {
     }
     const userRef = doc(db, 'Users', userId);
     showLoading();
-
     const unsubscribe = onSnapshot(
       userRef,
       async snap => {
         if (snap.exists()) {
           const userData = snap.data();
           if (userData && user) {
-            setUserDetails(snap.data());
+            const ud = {
+              id: userId,
+              ...snap.data(),
+            };
+            setUserDetails(ud);
           }
         } else {
           setUserDetails(null);

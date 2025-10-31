@@ -2,6 +2,7 @@ import { useAuth } from '@context/AuthContext';
 import { useLoading } from '@context/LoadingContext';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { getListings, getListingsByIds } from '@firebase/listingService';
+import { isEqual } from '@utils/basicValidations';
 import { ListingItem, Filter } from 'types/global';
 
 export function useListings(showFavorites = false) {
@@ -9,18 +10,21 @@ export function useListings(showFavorites = false) {
   const { showLoading, hideLoading, isLoading } = useLoading();
 
   const [listings, setListings] = useState<ListingItem[]>([]);
-  const [favoriteListings, setFavoriteListings] = useState<ListingItem[]>([]);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [lastDoc, setLastDoc] = useState<any>(null);
-  
+
   const prevFiltersRef = useRef<Filter[]>([]);
 
+  // Favorite listings
+  const [favoriteListings, setFavoriteListings] = useState<ListingItem[]>([]);
+  const prevFavoriteIdsRef = useRef<string[]>([]);
   useEffect(() => {
+    const currentFavoriteIds = userDetails?.favorites || [];
+    if (isEqual(prevFavoriteIdsRef.current, currentFavoriteIds)) return;
+    prevFavoriteIdsRef.current = currentFavoriteIds;
     const getFavoriteListings = async () => {
-      if (userDetails?.favorites?.length) {
-        const favoriteListingsRes = await getListingsByIds(
-          userDetails.favorites,
-        );
+      if (currentFavoriteIds.length) {
+        const favoriteListingsRes = await getListingsByIds(currentFavoriteIds);
         setFavoriteListings(favoriteListingsRes);
       } else {
         setFavoriteListings([]);
@@ -29,23 +33,40 @@ export function useListings(showFavorites = false) {
     getFavoriteListings();
   }, [userDetails?.favorites]);
 
-  // 🔹 İlk sayfayı yükle
+  // Önbellekleme yaparak listing'leri çeken sorgu
+  const listingsCache = useRef(new Map());
+  const lastFetchTime = useRef(0);
+  const CACHE_DURATION = 15;
   const loadInitialListings = useCallback(
     async (newFilters: Filter[] = [], onlyApproved = true, force = false) => {
-      const sameFilters =
-        JSON.stringify(prevFiltersRef.current) === JSON.stringify(newFilters);
-      if (!force && hasLoadedOnce && sameFilters) return;
+      const cacheKey = JSON.stringify({ filters: newFilters, onlyApproved });
+      const now = Date.now();
+      // Önbellek süresi bitmemişse ve daha önce ön belleğe alınmışsa
+      if (
+        !force &&
+        listingsCache.current.has(cacheKey) &&
+        now - lastFetchTime.current < CACHE_DURATION
+      ) {
+        const cached = listingsCache.current.get(cacheKey);
+        setLastDoc(cached.lastDoc);
+        hideLoading();
+        return;
+      }
 
       prevFiltersRef.current = newFilters;
       showLoading();
       setLastDoc(null);
 
       try {
-        const { listings: initialListings, lastDoc: newLastDoc } = await getListings(
-          newFilters,
-          onlyApproved,
-          null,
-        );
+        const { listings: initialListings, lastDoc: newLastDoc } =
+          await getListings(newFilters, onlyApproved, null);
+
+        // Önbelleğe kaydet
+        listingsCache.current.set(cacheKey, {
+          listings: initialListings,
+          lastDoc: newLastDoc,
+        });
+        lastFetchTime.current = now;
 
         setListings(initialListings);
         setLastDoc(newLastDoc);

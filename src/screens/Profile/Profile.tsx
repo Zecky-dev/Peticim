@@ -22,7 +22,7 @@ import styles from './Profile.style';
 import colors from '@utils/colors';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { userDetails, refreshUserDetails, logout } = useAuth();
   const { images, setImages, pickFromCamera, pickFromLibrary } =
     useImagePicker();
   const { showLoading, hideLoading } = useLoading();
@@ -55,33 +55,42 @@ const Profile = () => {
   };
 
   const sendContactEmail = () => {
-    Linking.openURL('mailto:peticimapp@gmail.com');
+    try {
+      Linking.openURL('mailto:peticimapp@gmail.com');
+    } catch (error) {
+      showToast({
+        type: 'error',
+        text1: 'Hata',
+        text2: 'E-posta gönderimi sırasında bir hata oluştu.',
+      });
+    }
   };
 
   useEffect(() => {
     const handleUserAvatarChange = async () => {
-      if (!images || images.length === 0 || !user?.uid) return;
+      if (!images || images.length === 0 || !userDetails?.id) return;
       try {
         setModalVisible(false);
         showLoading();
         const uploadResult = await uploadImages(
           [images[0]],
           'profile_images',
-          user.uid,
+          userDetails.id,
           null,
         );
-        console.log('uploadResult', uploadResult)
         setAvatarUri(uploadResult.uploadedImages[0].url);
         showToast({
           type: 'success',
           text1: 'Başarılı',
           text2: 'Profil fotoğrafınız güncellendi.',
         });
+        refreshUserDetails();
       } catch (error: any) {
         showToast({
           type: 'error',
           text1: 'Hata',
-          text2: 'Profil fotoğrafı değiştirilirken bir hata meydana geldi, tekrar deneyiniz.',
+          text2:
+            'Profil fotoğrafı değiştirilirken bir hata meydana geldi, tekrar deneyiniz.',
           duration: 'medium',
         });
       } finally {
@@ -90,7 +99,9 @@ const Profile = () => {
       }
     };
     handleUserAvatarChange();
-  }, [images, user?.uid]);
+  }, [images, userDetails?.id]);
+
+  console.log('USER_DETAILS', userDetails);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -99,8 +110,8 @@ const Profile = () => {
           source={
             avatarUri
               ? { uri: avatarUri }
-              : user?.photoURL
-              ? { uri: user.photoURL }
+              : userDetails?.profilePicture?.url
+              ? { uri: userDetails.profilePicture.url }
               : require('@assets/images/avatar_default.png')
           }
           style={styles.avatar}
@@ -110,8 +121,10 @@ const Profile = () => {
         </View>
       </TouchableOpacity>
       <View style={{ alignItems: 'center' }}>
-        <Text style={styles.nameSurname}>{user?.displayName}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
+        <Text style={styles.nameSurname}>
+          {userDetails?.name} {userDetails?.surname}
+        </Text>
+        <Text style={styles.email}>{userDetails?.email}</Text>
       </View>
 
       <View style={styles.profileButtons}>
@@ -271,8 +284,8 @@ const Profile = () => {
           </View>
           <View style={{ flex: 1, justifyContent: 'flex-end', gap: 12 }}>
             <Text style={styles.donateModalText}>
-              Eğer projeye veya geliştiriciye destek olmak isterseniz mesajınız ile birlikte küçük bir
-              bağış yapabilirsiniz 🏠❤️🐈
+              Eğer projeye veya geliştiriciye destek olmak isterseniz mesajınız
+              ile birlikte küçük bir bağış yapabilirsiniz 🏠❤️🐈
             </Text>
             <Button
               backgroundColor={colors.success}

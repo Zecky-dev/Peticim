@@ -38,9 +38,16 @@ const applyFilters = (
     q = query(q, where('status', '==', 'approved'));
   }
   if (!filters) return q;
-  filters.forEach(filter => {
+  const animalTypeFilter = filters.find(f => f.field === 'animalType');
+  const otherFilters = filters.filter(f => f.field !== 'animalType');
+
+  if (animalTypeFilter) {
+    q = query(q, where('animalType', 'in', animalTypeFilter.value));
+  }
+  otherFilters.forEach(filter => {
     q = query(q, where(filter.field, filter.operator, filter.value));
   });
+
   return q;
 };
 
@@ -94,7 +101,7 @@ export const getListings = async (
   filters: Filter[] = [],
   onlyApproved: boolean = true,
   startAfterDoc: any = null,
-  pageSize: number = 10,
+  pageSize: number = 25,
 ) => {
   try {
     let q = query(
@@ -351,5 +358,45 @@ export const reportListing = async (
       text2: 'Rapor gönderilirken bir hata meydana geldi, tekrar deneyiniz.',
       duration: 'medium',
     });
+  }
+};
+
+// ============================
+// GET APPROVED LISTINGS BY USER ID
+// ============================
+export const getListingsByUserId = async (userId: string) => {
+  if (!userId) return [];
+
+  try {
+    const q = query(
+      listingsCollection,
+      where('userId', '==', userId),
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc'),
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) return [];
+
+    const listings = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return listings;
+  } catch (error: any) {
+    Sentry.withScope(scope => {
+      scope.setTag('function', 'getListingsByUserId');
+      scope.setExtra('userId', userId);
+      Sentry.captureException(error);
+    });
+    console.error('GET_LISTINGS_BY_USER_ID_ERROR', error);
+    showToast({
+      type: 'error',
+      text1: 'Hata',
+      text2: 'Kullanıcının ilanları alınırken bir hata oluştu.',
+    });
+    return [];
   }
 };

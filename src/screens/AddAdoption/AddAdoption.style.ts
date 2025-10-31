@@ -95,4 +95,35 @@ export default StyleSheet.create({
   formattedAddressText: {
     fontFamily: 'Comfortaa-Bold',
   },
+  errorText: {
+    fontFamily: 'Comfortaa-SemiBold',
+    color: colors.error,
+    fontSize: 13,
+    marginTop: 4,
+  },
+  autoFillContainer: {
+    backgroundColor: colors.black_50,
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+  autoFillTitle: {
+    fontFamily: 'Comfortaa-Bold',
+    fontSize: 13,
+    color: colors.black_50,
+  },
+  autoFillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 6,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  autoFillText: {
+    fontFamily: 'Comfortaa-SemiBold',
+    fontSize: 12,
+    color: colors.black,
+  },
 });

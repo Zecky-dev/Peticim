@@ -53,7 +53,20 @@ const ListingItem = ({ data, favorited }: ListingItemProps) => {
                 {data.animalType} - {data.animalBreed}
               </Text>
               <Text style={styles.title}>{data.title}</Text>
-              {data.age && <Text style={styles.age}>{data.age} yaşında</Text>}
+
+              <View style={{ ...styles.ageContainer, gap: data.age ? 4 : 0 }}>
+                <View style={styles.ageIconContainer}>
+                  <Icon
+                    name={data.age ? 'altimeter' : 'question'}
+                    type={data.age ? 'material-community' : 'antdesign'}
+                    size={data.age ? 12 : 16}
+                    color={colors.black_50}
+                  />
+                </View>
+                <Text style={styles.age}>
+                  {data.age ? `${data.age} yaşında` : 'Yaşı Bilinmiyor'}
+                </Text>
+              </View>
             </View>
             <View style={{ gap: 6 }}>
               <View style={styles.infoRow}>

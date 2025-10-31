@@ -7,7 +7,7 @@ export default StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 12,
     gap: 12,
-    backgroundColor: '#e3e3e3',
+    backgroundColor: colors.background,
   },
   separator: {
     height: 12,

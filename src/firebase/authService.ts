@@ -103,12 +103,9 @@ export const signInUser = async (email: string, password: string) => {
       });
       return false;
     }
-
     getFcmTokenService().then(async token => {
-      console.log('FCM_TOKEN', token);
       updateFCMToken(user, token);
     });
-
     return true;
   } catch (error: any) {
     Sentry.withScope(scope => {

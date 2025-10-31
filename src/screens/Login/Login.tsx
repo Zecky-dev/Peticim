@@ -21,11 +21,6 @@ import { loginValidationSchema } from '@utils/validationSchemas';
 import { showToast } from '@config/toastConfig';
 import { useAuth } from '@context/AuthContext';
 import { generateFirebaseErrorMessage } from '@firebase/helpers/generateFirebaseErrorMessage';
-import {
-  getCredentials,
-  removeCredentials,
-  saveCredentials,
-} from '@utils/storage';
 import styles from './Login.style';
 
 const Login = () => {
@@ -33,35 +28,14 @@ const Login = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const route = useRoute<RouteProp<AuthStackParamList, 'Login'>>();
-  const { login } = useAuth();
+  const { login, refreshUserDetails } = useAuth();
 
   // States
-  const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [initialValues, setInitialValues] = useState({
     email: route.params?.prefilledEmail || '',
     password: '',
   });
-
-  // Hooks
-  useEffect(() => {
-    const loadRememberedCredentials = async () => {
-      try {
-        const credentials = await getCredentials();
-        if (credentials) {
-          setInitialValues({
-            email: credentials.email,
-            password: credentials.password,
-          });
-          setRememberMe(true);
-        }
-      } catch (error) {
-        console.error('Failed to load credentials from storage:', error);
-        setRememberMe(false);
-      }
-    };
-    loadRememberedCredentials();
-  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -72,11 +46,7 @@ const Login = () => {
   const handleLogin = async (email: string, password: string) => {
     try {
       await login(email, password);
-      if (rememberMe) {
-        await saveCredentials(email, password);
-      } else {
-        await removeCredentials();
-      }
+      refreshUserDetails();
     } catch (error: any) {
       if (error.code) {
         showToast({
@@ -155,13 +125,6 @@ const Login = () => {
                     }
                     autoCapitalize='none'
                   />
-                  <View style={{ marginTop: 8 }}>
-                    <Checkbox
-                      label="Beni hatırla"
-                      checked={rememberMe}
-                      onCheckChange={setRememberMe}
-                    />
-                  </View>
                   <View style={styles.actionButtons}>
                     <TouchableOpacity
                       activeOpacity={0.8}

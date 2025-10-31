@@ -22,7 +22,7 @@ import { useAuth } from '@context/AuthContext';
 import styles from './Register.style';
 
 const Register = () => {
-  const { register } = useAuth();
+  const { register, refreshUserDetails } = useAuth();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();

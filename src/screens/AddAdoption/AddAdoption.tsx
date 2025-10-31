@@ -21,7 +21,6 @@ import { useImagePicker } from '@hooks/useImagePicker';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { adoptionValidationSchema } from '@utils/validationSchemas';
 import { createListing } from '@firebase/listingService';
-import { classifyAnimal } from '@api/image';
 import animalData from '../../constants/animalData.json';
 import colors from '@utils/colors';
 import styles from './AddAdoption.style';
@@ -40,8 +39,8 @@ const AddAdoption = () => {
   // Hooks
   const navigation =
     useNavigation<BottomTabNavigationProp<RootTabParamList, 'AddAdoption'>>();
-  const { images, setImages, pickFromLibrary } = useImagePicker();
-  const { user } = useAuth();
+  const { pickFromLibrary } = useImagePicker();
+  const { user, userDetails } = useAuth();
   const { showLoading, hideLoading } = useLoading();
   const { getLocationInfo } = useLocation();
 
@@ -100,6 +99,9 @@ const AddAdoption = () => {
       label: d.name,
       value: d.id,
     }));
+    districtItems.sort((a, b) => {
+      return a.label.localeCompare(b.label, 'tr', { sensitivity: 'base' });
+    });
     setDistricts(districtItems);
   };
 
@@ -112,6 +114,9 @@ const AddAdoption = () => {
       label: n.name,
       value: n.id,
     }));
+    neighborhoodItems.sort((a, b) => {
+      return a.label.localeCompare(b.label, 'tr', { sensitivity: 'base' });
+    });
     setNeighborhoods(neighborhoodItems);
   };
 
@@ -123,6 +128,7 @@ const AddAdoption = () => {
   const lottieRefStep2 = useRef<LottieView>(null);
   const lottieRefStep3 = useRef<LottieView>(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const formikRef = useRef(formik);
 
   // Statics
   const animalTypes = animalData.map(animal => ({
@@ -217,7 +223,7 @@ const AddAdoption = () => {
       phone,
       address,
       views: 0,
-      geohash: address?.geohash ?? '',
+      geohash: (address as any)?.geohash ?? '',
       status: 'pending',
     };
     const createListingSuccess = await createListing(
@@ -235,7 +241,8 @@ const AddAdoption = () => {
         duration: 'long',
       });
 
-      navigation.navigate('ProfileStack', { screen: 'MyAdoptionListings' });
+      // Navigate to ProfileStack with nested Profile screen
+      navigation.navigate('ProfileStack' as any, undefined);
     }
     hideLoading();
     formik.setSubmitting(false);
@@ -251,8 +258,8 @@ const AddAdoption = () => {
         maxWidth: 800,
       });
       if (!pickedImages || pickedImages.length === 0) return;
+      // Sadece formik'i güncelle, setImages'ı kaldır
       formik.setFieldValue('photos', pickedImages);
-      setImages(pickedImages);
     } catch (err: any) {
       showToast({
         type: 'error',
@@ -260,7 +267,6 @@ const AddAdoption = () => {
         text2: err.message,
       });
       formik.setFieldValue('photos', []);
-      setImages([]);
     } finally {
       hideLoading();
     }
@@ -273,6 +279,9 @@ const AddAdoption = () => {
         value: city.id,
         label: city.name,
       }));
+      cityNames.sort((a, b) => {
+        return a.label.localeCompare(b.label, 'tr', { sensitivity: 'base' });
+      });
       setCities(cityNames);
     };
     getCityList();
@@ -355,17 +364,42 @@ const AddAdoption = () => {
 
   useFocusEffect(
     useCallback(() => {
-      formik.resetForm();
+      // formikRef'i güncelle
+      formikRef.current = formik;
+
+      // Formik reset et - tüm alanları temizle
+      formikRef.current.resetForm({
+        values: {
+          title: '',
+          description: '',
+          photos: [],
+          animalType: '',
+          animalBreed: '',
+          vaccinated: false,
+          sterilized: false,
+          phone: '',
+          age: null,
+          address: null,
+        },
+        touched: {},
+        errors: {},
+      });
+
+      // Diğer state'leri reset et
       setCurrentStep(1);
-      setImages([]);
       setBreedsList([]);
+      setSelectedCity(null);
+      setSelectedDistrict(null);
+      setSelectedNeighborhood(null);
+      setLocationModalVisible(false);
       slideAnim.setValue(0);
+
       return () => {};
-    }, []),
+    }, []), // ⚠️ Boş dependency array - sadece screen enter'da çalış
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -382,20 +416,25 @@ const AddAdoption = () => {
           >
             {/* Step 1 → Fotoğraf, Başlık, Açıklama */}
             <View style={{ width, padding: 16 }}>
-              {images.length === 0 ? (
-                <TouchableOpacity
-                  onPress={handleImagePick}
-                  style={styles.addImageButton}
-                  activeOpacity={0.7}
-                >
-                  <Icon
-                    name="images-outline"
-                    color={colors.gray}
-                    type="ion"
-                    size={36}
-                  />
-                  <Text style={styles.addImageText}>Resim Seç</Text>
-                </TouchableOpacity>
+              {formik.values.photos.length === 0 ? (
+                <>
+                  <TouchableOpacity
+                    onPress={handleImagePick}
+                    style={styles.addImageButton}
+                    activeOpacity={0.7}
+                  >
+                    <Icon
+                      name="images-outline"
+                      color={colors.gray}
+                      type="ion"
+                      size={36}
+                    />
+                    <Text style={styles.addImageText}>Resim Seç</Text>
+                  </TouchableOpacity>
+                  {formik.touched.photos && formik.errors.photos && (
+                    <Text style={styles.errorText}>{formik.errors.photos}</Text>
+                  )}
+                </>
               ) : (
                 <View>
                   <Swiper
@@ -408,7 +447,7 @@ const AddAdoption = () => {
                       backgroundColor: colors.gray,
                     }}
                   >
-                    {images.map((image, i) => (
+                    {formik.values.photos.map((image: any, i: number) => (
                       <Image
                         key={i}
                         style={{
@@ -436,6 +475,7 @@ const AddAdoption = () => {
                 <Input
                   label="Başlık"
                   placeholder="İlan başlığı giriniz.."
+                  defaultValue={formik.values.title}
                   value={formik.values.title}
                   onChangeText={text => formik.setFieldValue('title', text)}
                   onBlur={() => formik.setFieldTouched('title')}
@@ -447,6 +487,7 @@ const AddAdoption = () => {
                   multiline
                   numberOfLines={5}
                   value={formik.values.description}
+                  defaultValue={formik.values.description}
                   onChangeText={text =>
                     formik.setFieldValue('description', text)
                   }
@@ -510,6 +551,9 @@ const AddAdoption = () => {
                   label="Yaş"
                   placeholder="Yaş giriniz.."
                   keyboardType="decimal-pad"
+                  defaultValue={
+                    formik.values.age ? String(formik.values.age) : ''
+                  }
                   value={formik.values.age ? String(formik.values.age) : ''}
                   onChangeText={text =>
                     formik.setFieldValue('age', text ? Number(text) : '')
@@ -560,11 +604,54 @@ const AddAdoption = () => {
                   bilgilerinizi paylaşın.
                 </Text>
               </View>
+
+              {/* Auto-fill saved details option */}
+              {userDetails?.phone || userDetails?.address ? (
+                <View style={styles.autoFillContainer}>
+                  <Text style={styles.autoFillTitle}>
+                    Kaydedilmiş Bilgilerinizi Kullanın
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.autoFillButton}
+                    onPress={() => {
+                      if (userDetails?.phone) {
+                        formik.setFieldValue('phone', userDetails.phone);
+                      }
+                      if (userDetails?.address) {
+                        formik.setFieldValue('address', userDetails.address);
+                      }
+                    }}
+                  >
+                    <Icon
+                      name="checkmark-circle-outline"
+                      type="ion"
+                      size={20}
+                      color={colors.primary}
+                    />
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      {userDetails?.phone && (
+                        <Text style={styles.autoFillText}>
+                          Tel: {userDetails.phone}
+                        </Text>
+                      )}
+                      {userDetails?.address && (
+                        <Text style={styles.autoFillText} numberOfLines={2}>
+                          Adres:{' '}
+                          {(userDetails.address as any).formattedAddress ||
+                            userDetails.address}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+
               <Input
                 label="Telefon"
                 placeholder="5xxxxxxxxx"
                 keyboardType="phone-pad"
                 maxLength={10}
+                defaultValue={formik.values.phone}
                 value={formik.values.phone}
                 onChangeText={text => formik.setFieldValue('phone', text)}
                 onBlur={() => formik.setFieldTouched('phone')}
@@ -574,7 +661,9 @@ const AddAdoption = () => {
                 <Text style={styles.addressLabel}>Adres</Text>
                 {formik.values.address && (
                   <Text style={styles.formattedAddressText}>
-                    {formik.values.address.formattedAddress}
+                    {typeof formik.values.address === 'string'
+                      ? formik.values.address
+                      : (formik.values.address as any).formattedAddress}
                   </Text>
                 )}
                 <View>

@@ -25,6 +25,7 @@ export const getBaseURL = () => {
   }
 };
 
+console.log(getBaseURL());
 const axiosClient = axios.create({
   baseURL: getBaseURL(),
   timeout: 60000,

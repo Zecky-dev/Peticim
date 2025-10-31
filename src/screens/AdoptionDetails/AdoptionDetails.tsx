@@ -25,7 +25,11 @@ import { CircleButton, Button, Icon, ChipCard, Input } from '@components';
 import { useUserDetails } from '@hooks/useUserDetails';
 import { useAuth } from '@context/AuthContext';
 import { incrementListingView } from '@api/listing';
-import { deleteListing, reportListing, toggleFavorite } from '@firebase/listingService';
+import {
+  deleteListing,
+  reportListing,
+  toggleFavorite,
+} from '@firebase/listingService';
 import { useLoading } from '@context/LoadingContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { showToast } from '@config/toastConfig';
@@ -39,7 +43,11 @@ const AdoptionDetails = () => {
       NativeStackNavigationProp<AdoptionStackParamList, 'AdoptionDetails'>
     >();
 
-  const { user, userDetails: currentUserDetails } = useAuth();
+  const {
+    user,
+    userDetails: currentUserDetails,
+    refreshUserDetails,
+  } = useAuth();
   const { userDetails: listingOwnerUserDetails } = useUserDetails(data.userId);
 
   const { showLoading, hideLoading } = useLoading();
@@ -142,6 +150,7 @@ const AdoptionDetails = () => {
     const toggleSuccess = await toggleFavorite(data.id, user?.uid);
     if (toggleSuccess) {
       setIsFavorited(!isFavorited);
+      refreshUserDetails();
     }
   };
 
@@ -220,23 +229,25 @@ const AdoptionDetails = () => {
           >
             <CircleButton backgroundColor={colors.white} size={48} />
           </View>
-          <View
-            style={{
-              ...styles.backButtonContainer,
-              top: 16,
-              right: 16,
-            }}
-          >
-            <CircleButton
-              onPress={handleToggleFavorite}
-              backgroundColor={colors.white}
-              iconColor={isFavorited ? colors.error : colors.primary}
-              iconName={isFavorited ? 'heart' : 'heart-outline'}
-              iconType="ion"
-              iconSize={24}
-              size={48}
-            />
-          </View>
+          {data.status !== 'pending' && (
+            <View
+              style={{
+                ...styles.backButtonContainer,
+                top: 16,
+                right: 16,
+              }}
+            >
+              <CircleButton
+                onPress={handleToggleFavorite}
+                backgroundColor={colors.white}
+                iconColor={isFavorited ? colors.error : colors.primary}
+                iconName={isFavorited ? 'heart' : 'heart-outline'}
+                iconType="ion"
+                iconSize={24}
+                size={48}
+              />
+            </View>
+          )}
         </View>
         <View style={{ marginTop: 8 }}>
           <Text style={styles.title}>{data.title}</Text>
@@ -315,7 +326,14 @@ const AdoptionDetails = () => {
 
           <View style={{ marginTop: 8 }}>
             <Text style={styles.sectionTitle}>İlan Sahibi</Text>
-            <View style={styles.adsOwnerContainer}>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('AdoptionOwnerProfile', {
+                  ownerData: listingOwnerUserDetails,
+                })
+              }
+              style={styles.adsOwnerContainer}
+            >
               <Image
                 source={
                   !listingOwnerUserDetails?.profilePicture?.url
@@ -328,7 +346,7 @@ const AdoptionDetails = () => {
                 {listingOwnerUserDetails?.name}{' '}
                 {listingOwnerUserDetails?.surname}
               </Text>
-            </View>
+            </TouchableOpacity>
             <View style={{ gap: 8 }}>
               {data.userId !== user?.uid && (
                 <Button

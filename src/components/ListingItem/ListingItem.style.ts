@@ -4,13 +4,21 @@ export default StyleSheet.create({
   container: {
     borderLeftColor: colors.primary,
     borderLeftWidth: 4,
-    paddingLeft: 4,
+    paddingLeft: 8,
+    paddingRight: 6,
     paddingVertical: 12,
     backgroundColor: 'whitesmoke',
     flexDirection: 'row',
     gap: 8,
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
+  },
+  ageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ageIconContainer: {
+    top: 4,
   },
   image: {
     width: 100,
@@ -23,9 +31,10 @@ export default StyleSheet.create({
     fontSize: 13,
   },
   age: {
-    color: colors.black,
+    color: colors.black_50,
     fontFamily: 'Comfortaa-Bold',
     fontSize: 12,
+    marginTop: 6,
   },
   animalType: {
     color: colors.black_50,

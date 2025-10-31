@@ -7,6 +7,7 @@ export default StyleSheet.create({
     gap: 12,
     paddingBottom: 40,
     flexGrow: 1,
+    backgroundColor: colors.background,
   },
   avatar: {
     width: 128,

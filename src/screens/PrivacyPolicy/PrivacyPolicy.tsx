@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
   ActivityIndicator,
-  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
@@ -16,7 +13,7 @@ import styles from './PrivacyPolicy.style';
 import remoteConfig from '@react-native-firebase/remote-config';
 
 const PrivacyPolicy = () => {
-  const { userDetails } = useAuth();
+  const { userDetails, refreshUserDetails } = useAuth();
   const [pdfUrl, setPdfUrl] = useState('');
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -44,6 +41,7 @@ const PrivacyPolicy = () => {
   const handleAccept = async () => {
     if (!userDetails?.id) return;
     await acceptPrivacyPolicy(userDetails.id);
+    refreshUserDetails();
   };
 
   return (

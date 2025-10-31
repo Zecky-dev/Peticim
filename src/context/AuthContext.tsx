@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { onAuthStateChanged, signOut } from '@react-native-firebase/auth';
 import { auth, db } from '@firebase/firebase';
-import { doc, onSnapshot } from '@react-native-firebase/firestore';
+import { doc, getDoc, onSnapshot } from '@react-native-firebase/firestore';
 import { useLoading } from './LoadingContext';
 import { User } from 'types/global';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -20,6 +20,7 @@ interface AuthProviderProps {
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
   userDetails: User | null;
+  refreshUserDetails: () => void;
   requiresPrivacyPolicyAcceptance: boolean;
   initializing: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -42,8 +43,13 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   // 🔹 Auth değişimlerini dinle
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, u => {
-      if (u && u.emailVerified) setUser(u);
-      else setUser(null);
+      if (u && u.emailVerified) {
+        setUser(u);
+      } else {
+        setUser(null);
+        setUserDetails(null);
+        setRequiresPrivacyPolicyAcceptance(false);
+      }
       if (initializing) setInitializing(false);
     });
     return subscriber;
@@ -51,34 +57,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // 🔹 Firestore’daki kullanıcı detaylarını realtime olarak dinle
   useEffect(() => {
-    if (!user?.uid) {
-      setUserDetails(null);
-      setRequiresPrivacyPolicyAcceptance(false);
-      return;
-    }
-
-    const userRef = doc(db, 'Users', user.uid);
-
-    const unsubscribe = onSnapshot(
-      userRef,
-      snap => {
-        if (snap.exists()) {
-          const data = snap.data() as User;
-          setUserDetails({ ...data, id: snap.id });
-          const accepted = data.privacyPolicyAccepted === true;
-          setRequiresPrivacyPolicyAcceptance(!accepted);
-        } else {
-          setUserDetails(null);
-          setRequiresPrivacyPolicyAcceptance(false);
-        }
-      },
-      err => {
-        console.error('AuthProvider userDetails error:', err);
-        setRequiresPrivacyPolicyAcceptance(false);
-      },
-    );
-
-    return () => unsubscribe();
+    refreshUserDetails();
   }, [user?.uid]);
 
   // 🔹 Auth işlemleri
@@ -128,6 +107,13 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       showLoading();
       await googleSignIn();
+      
+      const loggedInUser = auth.currentUser; // Anlık oturum açmış kullanıcıyı al
+      
+      // 🚨 Anlık UID'yi fonksiyona parametre olarak gönderin
+      if (loggedInUser) {
+        await refreshUserDetails(loggedInUser.uid); 
+      }
     } catch (error) {
       console.error('GOOGLE_LOGIN_ERROR:', error);
     } finally {
@@ -135,9 +121,30 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const refreshUserDetails = async (uidToRefresh?: string) => {
+    const currentUid = uidToRefresh || user?.uid;
+    if (!currentUid) return;
+    try {
+      const userRef = doc(db, 'Users', currentUid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const data = snap.data() as User;
+        setUserDetails({ ...data, id: snap.id });
+        setRequiresPrivacyPolicyAcceptance(data.privacyPolicyAccepted !== true);
+      } else if (!uidToRefresh) {
+        console.warn(`User document not found for UID: ${currentUid}`);
+      }
+    } catch (error) {
+      console.error('Refresh user details error:', error);
+      setUserDetails(null);
+      setRequiresPrivacyPolicyAcceptance(false);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     userDetails,
+    refreshUserDetails,
     initializing,
     login,
     register,

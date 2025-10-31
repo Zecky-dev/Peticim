@@ -22,10 +22,11 @@ import { showToast } from '@config/toastConfig';
 import colors from '@utils/colors';
 
 const AccountDetails = () => {
-  const { user } = useAuth();
+  const { user, userDetails, refreshUserDetails } = useAuth();
   const { showLoading, hideLoading } = useLoading();
-  const { userDetails } = useUserDetails(user?.uid || null); 
   const { getLocationInfo } = useLocation();
+
+  console.log('USER_DETAILS', userDetails);
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -48,6 +49,7 @@ const AccountDetails = () => {
     try {
       showLoading();
       await setDoc(userRef, dataToUpdate, { merge: true });
+      refreshUserDetails();
       showToast({
         type: 'success',
         text1: 'Başarılı',
@@ -112,7 +114,7 @@ const AccountDetails = () => {
                     <View style={styles.full}>
                       <Input
                         label="İsim"
-                        value={values.name}
+                        defaultValue={values.name}
                         onChangeText={handleChange('name')}
                         onBlur={handleBlur('name')}
                         placeholder="İsim"
@@ -127,7 +129,7 @@ const AccountDetails = () => {
                       <Input
                         label="Soyisim"
                         placeholder="Soyisim"
-                        value={values.surname}
+                        defaultValue={values.surname}
                         onChangeText={handleChange('surname')}
                         onBlur={handleBlur('surname')}
                         error={
@@ -144,7 +146,7 @@ const AccountDetails = () => {
                     maxLength={10}
                     keyboardType="numeric"
                     placeholder="5xxxxxxxxx"
-                    value={values.phone}
+                    defaultValue={values.phone}
                     onChangeText={handleChange('phone')}
                     onBlur={handleBlur('phone')}
                     error={
@@ -177,6 +179,7 @@ const AccountDetails = () => {
                     label="Biyografi"
                     multiline={true}
                     value={values.bio}
+                    defaultValue={values.bio}
                     onChangeText={handleChange('bio')}
                     placeholder="Hayvanları çok severim...."
                     onBlur={handleBlur('bio')}

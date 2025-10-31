@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Text,
   Pressable,
   FlatList,
   TouchableOpacity,
   View,
+  TextInput,
   ViewStyle,
   TextStyle,
 } from 'react-native';
@@ -13,6 +14,11 @@ import styles from './Picker.style';
 import Icon from '@components/Icon';
 import colors from '@utils/colors';
 import Alert from '@components/Alert';
+
+type PickerItem = {
+  label: string;
+  value: string | number;
+};
 
 type PickerProps = {
   label: string;
@@ -38,7 +44,14 @@ const Picker = ({
   additionalStyles,
 }: PickerProps) => {
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
   const selectedItem = items.find(item => item.value === value);
+
+  // Arama metnine göre filtreleme
+  const filteredItems = useMemo(() => {
+    const lower = searchText.toLowerCase();
+    return items.filter(i => i.label.toLowerCase().includes(lower));
+  }, [searchText, items]);
 
   return (
     <>
@@ -82,21 +95,36 @@ const Picker = ({
         hideModalContentWhileAnimating={false}
       >
         <View style={styles.pickerContentContainer}>
+          {/* 🔍 Arama inputu */}
+          <View style={styles.searchContainer}>
+            <Icon name="search" type="ion" size={18} color={colors.black_50} />
+            <TextInput
+              placeholder={`${label} ara...`}
+              value={searchText}
+              onChangeText={setSearchText}
+              style={styles.searchInput}
+              placeholderTextColor={colors.black_50}
+            />
+          </View>
+
           <FlatList
-            data={items}
+            data={filteredItems}
             keyExtractor={(_, i) => i.toString()}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
-            renderItem={({ item, index }) => (
+            renderItem={({ item }) => (
               <TouchableOpacity
-                key={index}
                 style={styles.pickerModalItem}
                 onPress={() => {
                   onSelect(item);
                   setPickerModalVisible(false);
+                  setSearchText('');
                 }}
               >
                 <Text style={styles.pickerModalItemText}>{item.label}</Text>
               </TouchableOpacity>
+            )}
+            ListEmptyComponent={() => (
+              <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
             )}
           />
         </View>

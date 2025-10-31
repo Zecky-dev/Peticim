@@ -70,7 +70,6 @@ const Input = ({
           placeholder={placeholder}
           placeholderTextColor={colors.gray}
           maxLength={maxLength}
-          value={textValue}
           onChangeText={text => {
             setTextValue(text);
             if (rest.onChangeText) rest.onChangeText(text);

@@ -10,4 +10,5 @@ export default {
   black_40: 'rgba(0,0,0,0.50)',
   gray: '#ccc',
   primary: '#7916da',
+  background: '#ebe7f2',
 };

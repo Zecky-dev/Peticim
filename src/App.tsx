@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View, BackHandler, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@config/toastConfig';
@@ -350,9 +350,37 @@ const App = () => {
       updateFCMToken(user, token);
     });
     const unsubscribeForeground = listenForegroundNotifications();
+
+    // Back press handler - app exit confirmation
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        Alert.alert(
+          'Uygulamadan Çık',
+          'Uygulamadan çıkmak istiyor musunuz?',
+          [
+            {
+              text: 'Hayır',
+              style: 'cancel',
+              onPress: () => {},
+            },
+            {
+              text: 'Evet',
+              style: 'destructive',
+              onPress: () => {
+                BackHandler.exitApp();
+              },
+            },
+          ],
+        );
+        return true;
+      },
+    );
+
     return () => {
       unsubscribeToken();
       unsubscribeForeground();
+      backHandler.remove();
     };
   }, []);
 

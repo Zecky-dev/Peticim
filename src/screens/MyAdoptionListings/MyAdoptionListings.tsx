@@ -3,15 +3,16 @@ import { useListings } from '@hooks/useListings';
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, ActivityIndicator } from 'react-native';
 import ListItem from './components/ListingItem';
-import { EmptyList } from '@components';
+import { EmptyList, Button } from '@components';
 import LottieView from 'lottie-react-native';
 import styles from './MyAdoptionListings.style';
 import colors from '@utils/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 const MyAdoptionListings = () => {
   const { user } = useAuth();
+  const navigation = useNavigation();
   const { listings, loadInitialListings, setListings, hasLoadedOnce } =
     useListings();
   const [refreshing, setRefreshing] = useState(false);
@@ -33,7 +34,7 @@ const MyAdoptionListings = () => {
     await loadInitialListings(
       [{ field: 'userId', operator: '==', value: user?.uid }],
       false,
-      true
+      true,
     );
     setRefreshing(false);
   };
@@ -63,17 +64,25 @@ const MyAdoptionListings = () => {
             return <ActivityIndicator size={'large'} color={colors.primary} />;
           }
           return (
-            <EmptyList
-              image={
-                <LottieView
-                  autoPlay
-                  loop
-                  source={require('@assets/lottie/notFound.json')}
-                  style={styles.notFoundAnimation}
-                />
-              }
-              label="İlan Bulunamadı"
-            />
+            <View style={{padding: 16}}>
+              <EmptyList
+                image={
+                  <LottieView
+                    autoPlay
+                    loop
+                    source={require('@assets/lottie/notFound.json')}
+                    style={styles.notFoundAnimation}
+                  />
+                }
+                label="Henüz bir ilanın yok"
+                button={
+                  <Button
+                    label="Yeni Bir İlan Ekle"
+                    onPress={() => (navigation as any).navigate('AddAdoption')}
+                  />
+                }
+              />
+            </View>
           );
         }}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

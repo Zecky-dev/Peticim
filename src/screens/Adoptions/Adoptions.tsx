@@ -106,20 +106,29 @@ const Adoptions = () => {
     const fetchCities = async () => {
       const citiesRes = await getCities();
       if (citiesRes) {
+        console.log('CITIES_RES', citiesRes);
+        const formattedCities = citiesRes
+          .map((c: any) => ({ label: c.name, value: c.id }))
+          .sort((a, b) =>
+            a.label.localeCompare(b.label, 'tr', { sensitivity: 'base' }),
+          );
+        console.log('FORMATTED_CITIES', formattedCities);
         setLocation((prev: any) => ({
           ...prev,
-          cities: citiesRes.map((c: any) => ({ label: c.name, value: c.id })),
+          cities: formattedCities,
         }));
       }
     };
     fetchCities();
   }, []);
 
-  const { listings, loadInitialListings, loadMoreListings, favoriteListings } =
+  const { listings, loadInitialListings, loadMoreListings, favoriteListings, hasLoadedOnce } =
     useListings(showFavorites);
 
   useEffect(() => {
-    loadInitialListings();
+    if(!hasLoadedOnce) {
+      loadInitialListings();
+    }
   }, []);
 
   useFocusEffect(
@@ -141,16 +150,40 @@ const Adoptions = () => {
   // Filter functions
   const toggleAnimalFilter = (newFilter: Filter) => {
     setTempFilters(prev => {
-      const isSelected = prev.some(
-        f => f.field === newFilter.field && f.value === newFilter.value,
-      );
+      // Mevcut animalType filtresini bul
+      const existingAnimalFilter = prev.find(f => f.field === 'animalType');
 
-      if (isSelected) {
-        return prev.filter(f => f.field !== 'animalType');
+      let updatedFilters = prev.filter(f => f.field !== 'animalType');
+      let updatedValues: string[] = [];
+
+      if (existingAnimalFilter) {
+        // Eğer zaten varsa, mevcut değerleri kopyala
+        updatedValues = [...existingAnimalFilter.value];
+
+        // Seçilen hayvan zaten varsa çıkar, yoksa ekle
+        if (updatedValues.includes(newFilter.value)) {
+          updatedValues = updatedValues.filter(v => v !== newFilter.value);
+        } else {
+          updatedValues.push(newFilter.value);
+        }
+
+        // Eğer hiç hayvan kalmadıysa filtreyi tamamen sil
+        if (updatedValues.length === 0) {
+          return updatedFilters;
+        }
       } else {
-        const withoutAnimalFilters = prev.filter(f => f.field !== 'animalType');
-        return [...withoutAnimalFilters, newFilter];
+        // Daha önce hiç animalType filtresi yoksa yeni başlat
+        updatedValues = [newFilter.value];
       }
+
+      return [
+        ...updatedFilters,
+        {
+          field: 'animalType',
+          operator: 'in',
+          value: updatedValues,
+        },
+      ];
     });
   };
 
@@ -307,7 +340,10 @@ const Adoptions = () => {
             <View style={styles.filterButtonsContainer}>
               {Object.entries(animalFilters).map(([key, filter]) => {
                 const isSelected = tempFilters.some(
-                  f => f.field === filter.field && f.value === filter.value,
+                  f =>
+                    f.field === filter.field &&
+                    Array.isArray(f.value) &&
+                    f.value.includes(filter.value),
                 );
                 return (
                   <TouchableOpacity

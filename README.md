@@ -1,97 +1,73 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+<div align="center">
+  <img height="300" alt="Frame" src="https://github.com/user-attachments/assets/fd20292a-f371-4192-8457-f4cf51681148" /></br>
+  <h3>Peticim uygulaması hayvan sahiplenme ve sahiplendirme mobil uygulamasıdır.</h3>
+</div>
 
-# Getting Started
+---
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+### 🏗️ Proje Yapısı
 
-## Step 1: Start Metro
-
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```
+peticim/
+├── src/
+│ ├── components/
+│ ├── screens/
+│ ├── context/
+│ ├── services/
+│ └── utils/
+├── assets/
+├── app.json
+├── package.json
+└── README.md
 ```
 
-## Step 2: Build and run your app
+### ✨ Uygulama Özellikleri:
+- Hayvan sahiplendirme ilanı oluşturma (Hayvan ile ilgili; fotoğraf, başlık, açıklama, aşı durumu, kısırlaştırma durumu gibi bilgiler girilerek sahiplendirme ilanı oluşturulur)
+- İlan detaylarını görüntüleme (Paylaşılmış ilanların detaylarını tekil sayfalarında görüntüleme)
+- Hayvan türü, şehir ve ilçe bazlı filtreleme
+- İlan sahibine mesaj göndermek için WhatsApp yönlendirmesi
+- Uygunsuz ilanlar için raporlama
+- İlan favorileme, favori ilanları görüntüleyebilme
+- Harita üzerinden konuma yakın ilanları görüntüleyebilme
+- Başka bir kullanıcının ilanlarını listeleyebilme
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### ⚙️ Kullanılan Teknolojiler
+- React Native (Mobil Önyüz / Frontend)
+- Next.JS, React (Admin Panel Frontend)
+- NodeJS, MongoDB (Backend)
+- Figma (Uygulama Tasarımları)
+- Context API (State Yönetimi)
+- Firebase (Auth & Database)
+- Cloudinary API (Fotoğraf Depolama)
+- Sentry (Hata Loglama)
 
-### Android
+### 📸 Uygulama Görselleri
 
-```sh
-# Using npm
-npm run android
+<div align="center">
+  <table>
+    <tr>
+      <td><img width="250" src="https://github.com/user-attachments/assets/f69e8632-f805-407d-80a5-7c881b17c11c" alt="Frame 119"></td>
+      <td><img width="250" src="https://github.com/user-attachments/assets/4ad658b0-f36b-4b8f-8c61-e96761c8457b" alt="Frame 120"></td>
+      <td><img width="250" src="https://github.com/user-attachments/assets/2464effd-2ebc-44df-b409-dd8fc9d9dec9" alt="Frame 121"></td>
+    </tr>
+    <tr>
+      <td colspan="3" align="center">
+        <img width="250" src="https://github.com/user-attachments/assets/fd933fb8-7cbf-469b-9e33-3c8f606dd888" alt="Frame 122">
+        <img width="250" src="https://github.com/user-attachments/assets/b8bcf54f-d3c4-4431-9cbb-50cf1b84131a" alt="Frame 123">
+      </td>
+    </tr>
+  </table>
+</div>
 
-# OR using Yarn
-yarn android
-```
+### 📪 İletişim & Öneriler
 
-### iOS
+📧 [ceng.zekeriyadonmez@gmail.com](mailto:ceng.zekeriyadonmez@gmail.com)  
+🌐 [zecky.dev](https://zecky.dev)  
+💼 [LinkedIn](https://www.linkedin.com/in/zekeriyadonmez/)  
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
 
-```sh
-bundle install
-```
 
-Then, and every time you update your native dependencies, run:
 
-```sh
-bundle exec pod install
-```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
